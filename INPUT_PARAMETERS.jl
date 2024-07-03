@@ -10,7 +10,7 @@
 
 # Set the planet 
 # =======================================================================================================
-const planet = "Venus"
+const planet = "Earth"
     # OPTIONS: "Mars", "Venus"
 
 # Input and output files, directory

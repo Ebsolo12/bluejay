@@ -128,13 +128,13 @@ def interpolate_solar_spectrum(spec, AU, show_plots=True, extrap_tail=False, sca
 
 # Get user input
 print("Enter the file with solar spectrum data in W/m^2/nm: ")
-solarfile = input()
+solarfile = input("C:\Users\pbt92\Downloads\sorce_ssi_l3.csv")
 print("Enter number of header rows: ")
-numheader = int(input())
+numheader = int(input(0))
 print("Enter AU at which you'd like the output: ")
-theAU = float(input())
+theAU = float(input(1))
 print("Enter a descriptive tag for this spectrum (please use underscores): ")
-descriptive_tag = input()
+descriptive_tag = input("2014_solar_max_spectrum")
 
 solarspec = np.loadtxt(solarfile, skiprows=numheader)
 
