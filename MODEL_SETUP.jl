@@ -314,7 +314,7 @@ if planet=="Mars"
     const water_mixing_ratio = water_MRs[water_loc][water_case]
 elseif planet=="Venus"
     const water_mixing_ratio = Dict("standard"=>1e-6)[water_case]  # parse(Float64, water_case) 
-elseif planet=="Venus"
+elseif planet=="Earth"
     const water_mixing_ratio = Dict("standard"=>1e-6)[water_case]  # parse(Float64, water_case) 
 end
 
