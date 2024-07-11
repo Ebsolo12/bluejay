@@ -28,28 +28,23 @@ end
 # cannot load something based on a variable defined in the enclosing scope. 
 const M_P = Dict( # Planetary mass in g 
                  "Mars"=>0.1075*5.972e27, 
-                 "Venus"=>4.867e27,
-                 "Earth"=>5.972e27
+                 "Venus"=>4.867e27
                 )[planet]
 const R_P = Dict( # Planetary radius in cm
                  "Mars"=>3396e5, 
-                 "Venus"=>6050e5,
-                 "Earth"=>637.8e5
+                 "Venus"=>6050e5
                 )[planet] 
 const DH = Dict( # Atmospheric D/H ratio 
                 "Mars"=>5.5 * 1.6e-4, # Yung 1988
                 "Venus"=>240 * 1.6e-4,
-                "Earth"=>1.6e-4
                )[planet]
 const sol_in_sec = Dict(
                         "Mars"=>88775.2438,   # One Mars sol in seconds
-                        "Venus"=>2.09968e7,
-                        "Earth"=>86400
+                        "Venus"=>2.09968e7
                        )[planet]
 const season_in_sec = Dict(
                            "Mars"=>1.4838759e7,
-                           "Venus"=>4.8535373e6,
-                           "Earth"=>7.884e6
+                           "Venus"=>4.8535373e6
                           )[planet]
 const g = bigG * M_P / (R_P^2);
 const SA = 4*pi*(R_P)^2 # cm^2
@@ -225,7 +220,7 @@ const e_profile_type = ions_included==true ? "quasineutral" : "none"
 
 #                                       Altitude grid                  
 # =======================================================================================================
-const zmin = Dict("Venus"=>90e5, "Mars"=>0., "Earth"=>0)[planet]
+const zmin = Dict("Venus"=>90e5, "Mars"=>0.)[planet]
 const dz = 2e5  # Discretized layer thickness
 const zmax = 250e5  # Top altitude (cm)
 const alt = convert(Array, (zmin:dz:zmax)) # These are the layer centers.
@@ -244,24 +239,21 @@ const hygropause_alt = 40e5  # Location of the hygropause
 const Texo_opts = Dict("Mars"=>Dict("min-P2"=>190., "mean-P2"=>210., "max-P2"=>280.,   # These are based on solar min, mean, max.
                                     "min"=>175., "mean"=>225., "max"=>275.,   # These are based on solar min, mean, max.
                                     "meansundist"=>225., "aphelion"=>225., "perihelion"=>225.),
-                       "Venus"=>Dict("min"=>260., "mean"=>290., "max"=>320.),
-                       "Earth"=>Dict("min"=>240., "mean"=>283., "max"=>320.))
+                       "Venus"=>Dict("min"=>260., "mean"=>290., "max"=>320.))
 
 const Texo_inclusive_opts = Dict("inclusive-ap"=>175., 
                                  "inclusive-mean"=>225., 
                                  "inclusive-peri"=>275.)
 
-const Tsurf = Dict("Mars"=>230., "Venus"=>735., "Earth"=>210)
-const Tmeso = Dict("Mars"=>130., "Venus"=>170.,"Earth"=>183)
+const Tsurf = Dict("Mars"=>230., "Venus"=>735.)
+const Tmeso = Dict("Mars"=>130., "Venus"=>170.)
 
 # Create the temperature profile control array
 const controltemps = [Tsurf[planet], Tmeso[planet], Texo_opts[planet]["mean"]]
-if planet=="Earth"
+if planet=="Venus"
     const meantemps = [Tsurf[planet], Tmeso[planet], Texo_opts[planet]["min"]] # Used for saturation vapor pressure. DON'T CHANGE!
 elseif planet=="Mars"
     const meantemps = [Tsurf[planet], Tmeso[planet], Texo_opts[planet]["mean"]] # Used for saturation vapor pressure. DON'T CHANGE!
-elseif planet =="Venus"
-    const meantemps = [Tsurf[planet], Tmeso[planet], Texo_opts[planet]["mean"]]
 end
 
 
@@ -279,7 +271,7 @@ if special_seasonal_case!=nothing
 end
 
 # Now create the actual temperature profiles
-if planet=="Earth"
+if planet=="Mars"
     const T_array_dict = T_Mars(controltemps[1], controltemps[2], controltemps[3]; alt)
     const Tn_meanSVP = T_Mars(meantemps...; alt)["neutrals"]; # Needed for boundary conditions.
 elseif planet=="Venus"
