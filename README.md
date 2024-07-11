@@ -12,6 +12,7 @@ bluejay has thus far been implemented for Mars and Venus and carries the followi
   - Easy modification of the chemical network used (just supply an Excel spreadsheet with appropriate formatting)
 - Calculation of thermal and non-thermal escape of H, D, H2, and HD 
 - Capability to model surface (0 km) to space (exobase/escape region, ~250 km) 
+- Vertical coordinate: Altitude
 - Option to use a flexible Gear method ODE solver, or built-in Julia ODE solvers<sup>‡</sup>
 - Fast run time (~5-10 minutes per simulation)
 - Can be run to chemical equilibrium or for shorter time periods 
@@ -19,6 +20,7 @@ bluejay has thus far been implemented for Mars and Venus and carries the followi
 - Photochemical modeling without having to use FORTRAN ;)
 
 Things bluejay does not do at this time:
+- Use pressure as the vertical coordinate
 - Solar wind interactions of any kind 
 - Self-consistently calculated ion escape
 - Fluid dynamics of any kind 
@@ -43,6 +45,7 @@ At this time, there are no compiled binaries. The model is provided as a collect
 Julia packages the model depends on:
 
 - DataFrames
+- DataStructures
 - Dates
 - DelimitedFiles
 - DifferentialEquations
@@ -91,22 +94,23 @@ The Photochemistry module contains several submodules:
 - Ensure that the root folder contains the `Photochemistry` folder, the `uvxsect` folder, and the following scripts and files:
   - `converge_new_file.jl`
   - `CONSTANTS.jl`: True physical constants. Should never need to be changed unless adding new constants.
-  - `PLOT_STYLES.jl`: Styling choicse for model plots.
+  - `PLOT_STYLES.jl`: Styling choices for model plots.
   - `INPUT_PARAMETERS.jl`: Parameters that the user can change before running the model. 
   - `MODEL_SETUP.jl`: Some basic model parameters that don't change much, but depend on information in INPUT_PARAMETERS.jl.
   - `{PlanetName}-Inputs/REACTION_NETWORK_{PlanetName}.jl`, reaction rate data for the chemical network. Although rate constants don't change, these files also include the enthalpy calculations for each reaction and the excess energy of that reaction above escape velocity - which DOES change per planet. These sheets must be recalculated once for any new planet used in the model.
   - `INITIAL_GUESS.jl`, an initial guess for species densities by altitude
 
 **If modeling a new planet**:
-1. Add planetary constants to dictionaries in `MODEL_SETUP.jl` for the planet in question. If you change any variable names, make sure to Ctrl-F replace them all submodules of Photochemistry. Variables to update include: `M_P`, `R_P`, `DH`, `sol_in_sec`, `season_in_sec`, `g`, `SA`, `hygropause_alt`, `zmin`, `zmax`, `Texo/Tsurf/Tmeso` options, and there may be more I've missed but hopefully not.
-2. Use `scale_solar_spectrum.py` (Python, not Julia) to scale the solar min/mean/max spectra to the orbital AU appropriate to your chosen planet. If using for exoplanets, please provide your own solar spectrum in final units of photons/s/cm^2/nm.
-3. Run `modify_rxn_spreadsheet` (from the `ReactionNetwork.jl` submodule) at the command line so that enthalpies of reaction will be re-calculated and saved to a new REACTION_NETWORK spreadsheet. WARNING: If you don't do this, non-thermal escape fluxes will NOT be physical!
-4. Dig into the module and change these deeply buried things:
+1. Add a new folder in the model root called `(Planet)-Inputs` (without the parentheses), and a new folder one level up called `Results_(Planet)`.
+2. Add planetary constants to dictionaries in `MODEL_SETUP.jl` for the planet in question. If you change any variable names, make sure to Ctrl-F replace them all submodules of Photochemistry. Variables to update include: `M_P`, `R_P`, `DH`, `sol_in_sec`, `season_in_sec`, `g`, `SA`, `hygropause_alt`, `zmin`, `zmax`, `Texo/Tsurf/Tmeso` options, and there may be more I've missed but hopefully not.
+3. Use `scale_solar_spectrum.py` (Python, not Julia) to scale the solar min/mean/max spectra to the orbital AU appropriate to your chosen planet. If using for exoplanets, please provide your own solar spectrum in final units of photons/s/cm^2/nm.
+4. Run `modify_rxn_spreadsheet` (from the `ReactionNetwork.jl` submodule) at the command line so that enthalpies of reaction will be re-calculated and saved to a new REACTION_NETWORK spreadsheet. WARNING: If you don't do this, non-thermal escape fluxes will NOT be physical!
+5. Dig into the module and change these deeply buried things:
   - `Keddy()` (eddy diffusion profile)
   - Temperature profile: currently handled separately for each planet; make sure to change the call in `MODEL_SETUP.jl` also.
   - Water profile handling
   - `escape_probability()`: This will require new parameters for H and D escape that need to be calculated in a Monte Carlo particle transport model. Currently in May 2024 Bethan Gregory is responsible for this.
-5. You will need to generate a new initial guess of the atmosphere and feed it in as (e.g.) `INITIAL_GUESS.h5` You can use any method to do this. Suggestions include: Set the principal component of the atmosphere (e.g. CO2 on Mars) to be a constant value roughly what it is at the surface, and zero out all other species and let the model build them up; collect numbers from existing published works and use those.
+6. You will need to generate a new initial guess of the atmosphere and feed it in as (e.g.) `INITIAL_GUESS.h5` You can use any method to do this. Suggestions include: Set the principal component of the atmosphere (e.g. CO2 on Mars) to be a constant value roughly what it is at the surface, and zero out all other species and let the model build them up; collect numbers from existing published works and use those.
 
 **If adding new chemical species**:
 This list may be incomplete and will be updated.

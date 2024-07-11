@@ -28,6 +28,7 @@ using HDF5, JLD
 using LaTeXStrings
 using Dates
 using DataFrames
+using DataStructures
 using DelimitedFiles
 using SparseArrays
 using LinearAlgebra
@@ -974,7 +975,7 @@ as such in the reaction spreadsheet.
 =#
 println("$(Dates.format(now(), "(HH:MM:SS)")) Loading reaction network")
 reaction_network, hot_H_network, hot_D_network, 
-hot_H2_network, hot_HD_network = load_reaction_network(reaction_network_spreadsheet; saveloc=results_dir*sim_folder_name*"/active_rxns.xlsx",
+hot_H2_network, hot_HD_network = load_reaction_network(reaction_network_spreadsheet; saveloc=results_dir*sim_folder_name*"/$(used_rxns_spreadsheet_name)",
                                                                        write_rxns=true, get_hot_rxns=ions_included, ions_on=ions_included, all_species)
 
 #              Create evaluatable rate coefficients by reaction                 #
@@ -1025,7 +1026,7 @@ if adding_new_species==true
         if use_nonzero_initial_profiles
             println("Initializing non-zero profiles for $(new_neutrals)")
             for nn in new_neutrals
-                n_current[nn] = reshape(readdlm("../Resources/initial_profiles/$(string(nn))_initial_profile.txt", '\r', comments=true, comment_char='#'), (num_layers,))
+                n_current[nn] = reshape(readdlm("Resources/initial_profiles/$(string(nn))_initial_profile.txt", '\r', comments=true, comment_char='#'), (num_layers,))
             end
         end
     elseif converge_which == "ions"
@@ -1039,7 +1040,7 @@ if adding_new_species==true
             println("Initializing non-zero profiles for $(new_ions)")
             # first fill in the H-bearing ions from data-inspired profiles
             for ni in setdiff(new_ions, keys(D_H_analogues))
-                n_current[ni] = reshape(readdlm("../Resources/initial_profiles/$(string(ni))_initial_profile.txt", '\r', comments=true, comment_char='#'), (num_layers,))
+                n_current[ni] = reshape(readdlm("Resources/initial_profiles/$(string(ni))_initial_profile.txt", '\r', comments=true, comment_char='#'), (num_layers,))
             end
             # Then create profiles for the D-bearing analogues based on the H-bearing species profiles
             for ni in intersect(new_ions, keys(D_H_analogues))
@@ -1064,7 +1065,7 @@ if adding_new_species==true
             println("Initializing non-zero profiles for $(new_neutrals) and $(new_ions)")
             for nn in new_neutrals
                 try
-                    n_current[nn] = reshape(readdlm("../Resources/initial_profiles/$(string(nn))_initial_profile.txt", '\r', comments=true, comment_char='#'), (num_layers,))
+                    n_current[nn] = reshape(readdlm("Resources/initial_profiles/$(string(nn))_initial_profile.txt", '\r', comments=true, comment_char='#'), (num_layers,))
                 catch 
                     println("No initial guess found for $(nn). Initial profile will be zero everywhere.")
                 end
@@ -1072,7 +1073,7 @@ if adding_new_species==true
 
             for ni in setdiff(new_ions, keys(D_H_analogues))
                 try
-                    n_current[ni] = reshape(readdlm("../Resources/initial_profiles/$(string(ni))_initial_profile.txt", '\r', comments=true, comment_char='#'), (num_layers,))
+                    n_current[ni] = reshape(readdlm("Resources/initial_profiles/$(string(ni))_initial_profile.txt", '\r', comments=true, comment_char='#'), (num_layers,))
                 catch 
                     println("No initial guess found for $(ni). Initial profile will be zero everywhere.")
                 end
@@ -1595,6 +1596,22 @@ println("Time to beginning convergence is $(format_sec_or_min(time()-t1))\n\n")
 #                                                                              #
 # **************************************************************************** #
 
+# First ste up a dictionary to store the parameter DataFrames, so that we can 
+# make more than one call to writing out the file (the normal call and also the
+# call in the case of the model crashing)
+
+param_df_dict = OrderedDict("General"=>PARAMETERS_GEN, 
+                            "AtmosphericConditions"=>PARAMETERS_CONDITIONS, 
+                            "AltGrid"=>PARAMETERS_ALTGRID, 
+                            "AltInfo"=>PARAMETERS_ALT_INFO,
+                            "SpeciesLists"=>PARAMETERS_SPLISTS,
+                            "TemperatureArrays"=>PARAMETERS_TEMPERATURE_ARRAYS,
+                            "Crosssections"=>PARAMETERS_XSECTS, 
+                            "BoundaryConditions"=>PARAMETERS_BCS,
+                            "Solver" => PARAMETERS_SOLVER
+                            )
+xlsx_parameter_log = "$(results_dir)$(sim_folder_name)/PARAMETERS.xlsx"
+
 ti = time()
 println("$(Dates.format(now(), "(HH:MM:SS)")) Beginning convergence")
 
@@ -1617,8 +1634,7 @@ try
                                  Tn=Tn_arr, Ti=Ti_arr, Te=Te_arr, Tp=Tplasma_arr, Tprof_for_diffusion, transport_species, opt="",
                                  upper_lower_bdy_i, use_ambipolar, use_molec_diff, zmax)
 catch y
-    XLSX.writetable("$(results_dir)$(sim_folder_name)/PARAMETERS.xlsx", "General"=>PARAMETERS_GEN, "AtmosphericConditions"=>PARAMETERS_CONDITIONS, "SpeciesLists"=>PARAMETERS_SPLISTS,
-                    "Solver"=>PARAMETERS_SOLVER, "Crosssections"=>PARAMETERS_XSECTS, "BoundaryConditions"=>PARAMETERS_BCS)
+    XLSX.writetable(xlsx_parameter_log, param_df_dict...)
     write_to_log(logfile, "Terminated before completion at $(format_sec_or_min(time()-ti))", mode="a")
     throw("ERROR: Simulation terminated before completion with exception:")
 end
@@ -1716,7 +1732,7 @@ elseif problem_type == "Gear"
     write_final_state(atm_soln, results_dir, sim_folder_name, final_atm_file; alt, num_layers, hrshortcode, Jratedict, rshortcode, external_storage)
 
     # Write out the final column rates to the reaction log
-    calculate_and_write_column_rates("active_rxns.xlsx", atm_soln; all_species, dz, ion_species, num_layers, reaction_network, results_dir, sim_folder_name, 
+    calculate_and_write_column_rates(used_rxns_spreadsheet_name, atm_soln; all_species, dz, ion_species, num_layers, reaction_network, results_dir, sim_folder_name, 
                                                               Tn=Tn_arr[2:end-1], Ti=Ti_arr[2:end-1], Te=Te_arr[2:end-1])
     
     write_to_log(logfile, "$(Dates.format(now(), "(HH:MM:SS)")) Making production/loss plots", mode="a")
@@ -1739,14 +1755,8 @@ t7 = time()
 
 # Write out the parameters as the final step 
 
-XLSX.writetable("$(results_dir)$(sim_folder_name)/PARAMETERS.xlsx", "General"=>PARAMETERS_GEN, 
-                                                                    "AltGrid"=>PARAMETERS_ALTGRID, 
-                                                                    "AtmosphericConditions"=>PARAMETERS_CONDITIONS, 
-                                                                    "SpeciesLists"=>PARAMETERS_SPLISTS,
-                                                                    "Solver"=>PARAMETERS_SOLVER, 
-                                                                    "Crosssections"=>PARAMETERS_XSECTS, 
-                                                                    "BoundaryConditions"=>PARAMETERS_BCS, 
-                                                                    "TemperatureArrays"=>PARAMETERS_TEMPERATURE_ARRAYS)
+XLSX.writetable(xlsx_parameter_log, param_df_dict...)
+
 println("Saved parameter spreadsheet")
 write_to_log(logfile, "Simulation total runtime $(format_sec_or_min(t7-t1))", mode="a")
 println("Simulation finished!")
