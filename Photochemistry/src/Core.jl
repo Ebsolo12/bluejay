@@ -1050,7 +1050,8 @@ function escape_probability(sp, atmdict; globvars...)::Array
     # [1] = A = escape probability at altitude where above column = 0, for high energy particles. upper limit
     # [2] = a = how "transparent" the atmosphere is to an escaping atom. smaller for higher energy so this is for an upper limit.
     params = Dict("Mars"=>[0.916, 0.39],
-                  "Venus"=>[0.868, 0.058]
+                  "Venus"=>[0.868, 0.058],
+                  "Earth"=>[0.868, 0.058]
                  )[GV.planet]
 
     return params[1] .* exp.(-params[2] .* GV.collision_xsect[sp] .* column_density_above(n_tot(atmdict; GV.all_species, GV.dz); globvars...) ) 
@@ -1355,6 +1356,133 @@ function T_Venus(Tsurf::Float64, Tmeso::Float64, Texo::Float64, file_for_interp;
     return Dict("neutrals"=>NEUTRALS(), "ions"=>IONS(), "electrons"=>ELECTRONS())
 end
 
+function T_Earth(Tsurf, Tmeso, Texo; lapserate=-1e-4, z_meso_top=108e5, weird_Tn_param=8, globvars...)
+    #= 
+    Input:
+        Tsurf: Surface temperature in KT
+        Tmeso: tropopause/mesosphere tempearture
+        Texo: exobase temperature
+    Opt inputs:
+        lapserate: adiabatic lapse rate for the lower atmosphere. 1.4e-5 from Zahnle+2008, accounts for dusty atmo.
+        z_meso_top: height of the top of the mesosphere (sometimes "tropopause")
+        weird_Tn_param: part of function defining neutral temp in upper atmo. See Krasnopolsky 2002, 2006, 2010.
+    Output: 
+        Arrays of temperatures in K for neutrals, ions, electrons
+    =#
+    GV = values(globvars)
+    required = [:alt]
+    check_requirements(keys(GV), required)
+
+    # Altitudes at which various transitions occur -------------------------------
+    z_meso_bottom = GV.alt[searchsortednearest(GV.alt, (Tmeso-Tsurf)/(lapserate))]
+    
+    # These are the altitudes at which we "stitch" together the profiles 
+    # from fitting the tanh profile in Ergun+2015,2021 to Hanley+2021 DD8
+    # ion and electron profiles, and the somewhat arbitary profiles defined for
+    # the region roughly between z_meso_top and the bottom of the fitted profiles.
+    z_stitch_electrons = 142e5
+    z_stitch_ions = 164e5
+    
+    # Various indices to define lower atmo, mesosphere, and atmo -----------------
+    i_lower = findall(z->z < z_meso_bottom, GV.alt)
+    i_meso = findall(z->z_meso_bottom <= z <= z_meso_top, GV.alt)
+    i_upper = findall(z->z > z_meso_top, GV.alt)
+    i_meso_top = findfirst(z->z==z_meso_top, GV.alt)
+    i_stitch_elec = findfirst(z->z==z_stitch_electrons, GV.alt)
+    i_stitch_ions = findfirst(z->z==z_stitch_ions, GV.alt)
+
+    function NEUTRALS()
+        function upper_atmo_neutrals(z_arr)
+            @. return Texo - (Texo - Tmeso)*exp(-((z_arr - z_meso_top)^2)/(weird_Tn_param*1e10*Texo))
+        end
+        Tn = zeros(size(GV.alt))
+
+        if Tsurf==Tmeso==Texo # isothermal case
+            Tn .= Tsurf
+        else
+            Tn[i_lower] .= Tsurf .+ lapserate*GV.alt[i_lower]
+            Tn[i_meso] .= Tmeso
+            Tn[i_upper] .= upper_atmo_neutrals(GV.alt[i_upper])
+        end
+
+        return Tn 
+    end 
+
+    function ELECTRONS() 
+        function upper_atmo_electrons(z_arr, TH, TL, z0, H0)
+            #=
+            Functional form from Ergun+ 2015 and 2021, but fit to data for electrons and ions
+            in Hanley+ 2021, DD8 data.
+            =#
+
+            @. return ((TH + TL) / 2) + ((TH - TL) / 2) * tanh(((z_arr / 1e5) - z0) / H0)
+        end
+        Te = zeros(size(GV.alt))
+
+        if Tsurf==Tmeso==Texo # isothermal case
+            Te .= Tsurf
+        else
+            Te[i_lower] .= Tsurf .+ lapserate*GV.alt[i_lower]
+            Te[i_meso] .= Tmeso
+
+            # This region connects the upper atmosphere with the isothermal mesosphere
+            Te[i_meso_top+1:i_stitch_elec] .= upper_atmo_electrons(GV.alt[i_meso_top+1:i_stitch_elec], -1289.05806755, 469.31681082, 72.24740123, -50.84113252)
+
+            # Don't let profile get lower than specified meso temperature
+            Te[findall(t->t < Tmeso, Te)] .= Tmeso
+
+            # This next region is a fit of the tanh electron temperature expression in Ergun+2015 and 2021 
+            # to the electron profile in Hanley+2021, DD8
+            Te[i_stitch_elec:end] .= upper_atmo_electrons(GV.alt[i_stitch_elec:end], 1409.23363494, 292.20319103, 191.39012079, 36.64138724)
+        end 
+
+        return Te
+    end
+
+    function IONS()
+        function upper_atmo_ions(z_arr)
+            #=
+            fit to Gwen's DD8 profile, SZA 40, Hanley+2021, with values M = 47/13, B = -3480/13
+            =#
+            # New values for fit to SZA 60,Hanley+2022:
+            M = 3.40157034 
+            B = -286.48716122
+            @. return M*(z_arr/1e5) + B
+        end
+        
+        function meso_ions_byeye(z_arr)
+            # This is completely made up! Not fit to any data!
+            # It is only designed to make a smooth curve between the upper atmospheric temperatures,
+            # which WERE fit to data, and the mesosphere, where we demand the ions thermalize.
+
+            # Values used for Gwen's DD8 profile, SZA 40:  170/49 * (z/1e5) -11990/49
+            @. return 136/49 * (z_arr/1e5) -9000/49 # These values are for the new fit to SZA 60, Hanley+2022. (11/2/22)
+        end
+
+        Ti = zeros(size(GV.alt))
+
+        if Tsurf==Tmeso==Texo # isothermal case
+            Ti .= Tsurf
+        else
+            Ti[i_lower] .= Tsurf .+ lapserate*GV.alt[i_lower]
+            Ti[i_meso] .= Tmeso
+
+            # try as an average of neutrals and electrons. There is no real physical reason for this.
+            Ti[i_meso_top:i_stitch_ions] = meso_ions_byeye(GV.alt[i_meso_top:i_stitch_ions])
+
+            # Don't let profile get lower than specified meso temperature
+            Ti[findall(t->t < Tmeso, Ti)] .= Tmeso
+
+            # This next region is a fit of the tanh electron temperature expression in Ergun+2015 and 2021 
+            # to the electron profile in Hanley+2021, DD8
+            Ti[i_stitch_ions:end] .= upper_atmo_ions(GV.alt[i_stitch_ions:end])
+        end 
+        
+        return Ti
+    end 
+
+    return Dict("neutrals"=>NEUTRALS(), "ions"=>IONS(), "electrons"=>ELECTRONS())
+end
 
 #===============================================================================#
 #                   Transport and boundary condition functions                  #
@@ -1466,7 +1594,9 @@ function boundaryconditions(fluxcoef_dict, atmdict, M; nonthermal=true, globvars
             # lower boundary...
             if GV.planet=="Mars"
                 n_lower = [fluxcoef_dict[sp][2, :][1], fluxcoef_dict[sp][1, :][2]*these_bcs["n"][1]]
-            elseif GV.planet=="Venus"
+
+            
+            elseif GV.planet in ["Venus", "Earth"]
                 # get the eddy+molecular mixing velocities at the lower boundary of the atmosphere
                 v_lower_boundary_up = fluxcoef_dict[sp][1, # lower boundary cell, outside atmosphere
                                                         2] # upward mixing velocity
@@ -1486,12 +1616,17 @@ function boundaryconditions(fluxcoef_dict, atmdict, M; nonthermal=true, globvars
                     throw("Unhandled exception in lower density bc: $(y)")
                 end
             end
+            
+            
+
+        
 
             # upper boundary...
             try 
                 if GV.planet=="Mars"
                     n_upper = [fluxcoef_dict[sp][end-1, :][2], fluxcoef_dict[sp][end, :][1]*these_bcs["n"][2]]
-                elseif GV.planet=="Venus"
+            
+                elseif GV.planet in ["Venus, Earth"]
                     # get the eddy+molecular mixing velocities at the upper boundary of the atmosphere
                     v_upper_boundary_up = fluxcoef_dict[sp][end-1, # top cell of atmosphere
                                                             2]     # upward mixing velocity
@@ -1526,6 +1661,8 @@ function boundaryconditions(fluxcoef_dict, atmdict, M; nonthermal=true, globvars
             elseif GV.planet=="Venus"
                 f_lower = [0, these_bcs["f"][1]/GV.dz]
                 #             ^ no (-) sign, negative flux at lower boundary represents loss to surface
+            elseif GV.planet=="Earth"
+                f_lower = [0, these_bcs["f"][1]/GV.dz]
             end
             try        
                 @assert all(x->!isnan(x), f_lower)
@@ -1562,6 +1699,8 @@ function boundaryconditions(fluxcoef_dict, atmdict, M; nonthermal=true, globvars
                 v_lower = [-these_bcs["v"][1]/GV.dz, 0]
             #          ^ (-) sign needed so that negative velocity at lower boundary represents loss to surface
             #          (see "Sign convention" note above)
+        elseif GV.planet=="Earth"
+            v_lower = [-these_bcs["v"][1]/GV.dz, 0]
             end
 
             try
@@ -1810,7 +1949,7 @@ function fluxcoefs(sp::Symbol, Kv, Dv, H0v; globvars...)
         dTdzl_p[1] = @. (GV.Tp[1] - 1) / GV.dz
         Hsl[1] = @. (1 + GV.Hs_dict[sp][1]) / 2.0
         H0l[1] = @. (1 + H0v[charge_type(sp)][1]) / 2.0
-    elseif GV.planet=="Venus"
+    elseif GV.planet in ["Venus". "Earth"]
         # Downward transport away from the lower boundary layer, which is outside the model
         # These should never be used but we need to fill the array
         Dl[1] = Float64(NaN)
@@ -1843,7 +1982,18 @@ function fluxcoefs(sp::Symbol, Kv, Dv, H0v; globvars...)
         dTdzu_p[end] = @. (1 - GV.Tp[end]) / GV.dz
         Hsu[end] = @. (GV.Hs_dict[sp][end] + 1) / 2.0
         H0u[end] = @. (H0v[charge_type(sp)][end] + 1) / 2.0
-    elseif GV.planet=="Venus"
+    elseif GV.planet in ["Venus", "Earth"]
+        # Upwards flux from the upper boundary layer, which is outside the model
+        # These should never be used but we need to fill the array
+        Du[end] = Float64(NaN)
+        Ku[end] = Float64(NaN)
+        Tu_n[end] = Float64(NaN)
+        Tu_p[end] = Float64(NaN)
+        dTdzu_n[end] = Float64(NaN)
+        dTdzu_p[end] = Float64(NaN)
+        Hsu[end] = Float64(NaN)
+        H0u[end] = Float64(NaN)
+    elseif GV.planet=="Mars"
         # Upwards flux from the upper boundary layer, which is outside the model
         # These should never be used but we need to fill the array
         Du[end] = Float64(NaN)
@@ -1953,6 +2103,8 @@ function Keddy(z::Vector, nt::Vector; globvars...)
         k[upperatm] .= 2e13 ./ sqrt.(nt[upperatm])
     elseif GV.planet=="Venus"
         k = 8e12*(nt .^ -0.5)
+    elseif GV.planet=="Earth"
+        k = 10e5 #wtf is the rest
     end
 
     return k
@@ -2203,7 +2355,11 @@ function setup_water_profile!(atmdict; constfrac=1, dust_storm_on=false, make_sa
     elseif GV.planet=="Venus"
         # TODO: Add a more interesting implementation as needed.
         atmdict[:H2O] = constfrac .* n_tot(atmdict; GV.n_alt_index, GV.all_species)
-        atmdict[:HDO] = 2 * GV.DH * atmdict[:H2O] 
+        atmdict[:HDO] = 2 * GV.DH * atmdict[:H2O]
+    elseif GV.planet=="Earth"
+        # TODO: Add a more interesting implementation as needed.
+        atmdict[:H2O] = constfrac .* n_tot(atmdict; GV.n_alt_index, GV.all_species)
+        atmdict[:HDO] = 2 * GV.DH * atmdict[:H2O]  
     end
 
     # Plot the water profile 
