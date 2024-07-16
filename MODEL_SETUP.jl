@@ -377,6 +377,53 @@ if planet=="Mars"
                         :H=> Dict("f"=>[0., NaN], "v"=>[NaN, effusion_velocity(Tn_arr[end], 1.0; M_P, R_P, zmax)], "ntf"=>[NaN, "see boundaryconditions()"]),
                         :D=> Dict("f"=>[0., NaN], "v"=>[NaN, effusion_velocity(Tn_arr[end], 2.0; M_P, R_P, zmax)], "ntf"=>[NaN, "see boundaryconditions()"]),
                        );
+elseif planet=="Venus"
+    const ntot_at_lowerbdy = 9.5e15 # at 90 km
+    const KoverH_lowerbdy = Keddy([zmin], [ntot_at_lowerbdy]; planet)[1]/scaleH_lowerboundary(zmin, Tn_arr[1]; molmass, M_P, R_P, zmin)
+    const manual_speciesbclist=Dict(# major species neutrals at lower boundary (estimated from Fox&Sung 2001, Hedin+1985, agrees pretty well with VIRA)
+                                    :CO2=>Dict("n"=>[0.965*ntot_at_lowerbdy, NaN], "f"=>[NaN, 0.]),
+                                    :Ar=>Dict("n"=>[5e11, NaN], "f"=>[NaN, 0.]),
+                                    :CO=>Dict("n"=>[4.5e-6*ntot_at_lowerbdy, NaN], "f"=>[NaN, 0.]),
+                                    :O2=>Dict("n"=>[3e-3*ntot_at_lowerbdy, NaN], "f"=>[NaN, 0.]),
+                                    :N2=>Dict("n"=>[0.032*ntot_at_lowerbdy, NaN]),
+
+                                    # water mixing ratio is fixed at lower boundary
+                                    :H2O=>Dict("n"=>[water_mixing_ratio*ntot_at_lowerbdy, NaN], "f"=>[NaN, 0.]),
+                                    # we assume HDO has the bulk atmosphere ratio with H2O at the lower boundary, ~consistent with Bertaux+2007 observations
+                                    :HDO=>Dict("n"=>[2*DH*water_mixing_ratio*ntot_at_lowerbdy, NaN], "f"=>[NaN, 0.]),
+
+                                    # atomic H and D escape solely by photochemical loss to space, can also be mixed downward
+                                    :H=> Dict("v"=>[-KoverH_lowerbdy, effusion_velocity(Tn_arr[end], 1.0; zmax, M_P, R_P)],
+                                                    #                 ^^^ other options here:
+                                                    #                 effusion_velocity(Tn_arr[end], 1.0; zmax) # thermal escape, negligible
+                                                    #                 100 # representing D transport to nightside, NOT escape
+                                                    #                 NaN # No thermal escape to space, appropriate for global average model
+                                              "ntf"=>[NaN, "see boundaryconditions()"]),
+                                    :D=> Dict("v"=>[-KoverH_lowerbdy, effusion_velocity(Tn_arr[end], 2.0; zmax, M_P, R_P)], # 
+                                                    #                 ^^^ other options here:
+                                                    #                  effusion_velocity(Tn_arr[end], 2.0; zmax) # thermal escape, negligible
+                                                    #                 100 # representing D transport to nightside, NOT escape
+                                                    #                 NaN # No thermal escape to space, appropriate for global average model
+                                              "ntf"=>[NaN, "see boundaryconditions()"]),
+
+                                    # # H2 mixing ratio at lower boundary adopted from Yung&DeMore1982 as in Fox&Sung2001
+                                    # :H2=>Dict("n"=>[1e-7*ntot_at_lowerbdy, NaN],
+                                    #           "v"=>[NaN, effusion_velocity(Tn_arr[end], 2.0; zmax)],
+                                    #           "ntf"=>[NaN, "see boundaryconditions()"]),
+                                    # :HD=>Dict("n"=>[DH*1e-7*ntot_at_lowerbdy, NaN],
+                                    #           "v"=>[NaN, effusion_velocity(Tn_arr[end], 3.0; zmax)],
+                                    #           "ntf"=>[NaN, "see boundaryconditions()"]),
+
+                                    # unusued neutral boundary conditions
+                                    #:O=> Dict("v"=>[-KoverH_lowerbdy, NaN], "f"=>[NaN, 0.#=1.2e6=#]), # no effect on O profile
+                                    #:N=>Dict("v"=>[-KoverH_lowerbdy, NaN], "f"=>[NaN, 0.]),
+                                    #:NO=>Dict("v"=>[-KoverH_lowerbdy, NaN], #="n"=>[3e8, NaN],=# #="n"=>[5.5e-9*ntot_at_lowerbdy, NaN], =# "f"=>[NaN, 0.]),
+
+                                    # assume no ion loss, appropriate for global average and small observed rates
+                                    #:Hpl=>Dict("v"=>[-KoverH_lowerbdy, 0.0 #=effusion_velocity(Ti_arr[end], 1.0; zmax)=#]),#, "f"=>[NaN, 1.6e7]),
+                                    #:H2pl=>Dict("v"=>[-KoverH_lowerbdy, 0.0 #=effusion_velocity(Ti_arr[end], 2.0; zmax)=#]),#, "f"=>[NaN, 2e5]),
+                                    #:Opl=>Dict("v"=>[-KoverH_lowerbdy, 2e5], ), # "f"=>[NaN, 2.1e8] # tends to cause hollowing out of atmosphere
+                                    )
 elseif planet=="Earth"
     const ntot_at_lowerbdy = 9.5e15 # at 90 km
     const KoverH_lowerbdy = Keddy([zmin], [ntot_at_lowerbdy]; planet)[1]/scaleH_lowerboundary(zmin, Tn_arr[1]; molmass, M_P, R_P, zmin)
@@ -423,7 +470,8 @@ elseif planet=="Earth"
                                     #:Hpl=>Dict("v"=>[-KoverH_lowerbdy, 0.0 #=effusion_velocity(Ti_arr[end], 1.0; zmax)=#]),#, "f"=>[NaN, 1.6e7]),
                                     #:H2pl=>Dict("v"=>[-KoverH_lowerbdy, 0.0 #=effusion_velocity(Ti_arr[end], 2.0; zmax)=#]),#, "f"=>[NaN, 2e5]),
                                     #:Opl=>Dict("v"=>[-KoverH_lowerbdy, 2e5], ), # "f"=>[NaN, 2.1e8] # tends to cause hollowing out of atmosphere
-                                    );
+                                    );   
+                                 
 
     # add in downward mixing velocity boundary condition for all other species
     auto_speciesbclist = Dict()
