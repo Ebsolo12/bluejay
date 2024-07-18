@@ -1588,7 +1588,6 @@ function boundaryconditions(fluxcoef_dict, atmdict, M; nonthermal=true, globvars
             println("No entry $(sp) in bcdict")
             continue
         end
- 
         # DENSITY
         try 
             # lower boundary...
@@ -1623,10 +1622,11 @@ function boundaryconditions(fluxcoef_dict, atmdict, M; nonthermal=true, globvars
 
             # upper boundary...
             try 
+            
                 if GV.planet=="Mars"
                     n_upper = [fluxcoef_dict[sp][end-1, :][2], fluxcoef_dict[sp][end, :][1]*these_bcs["n"][2]]
             
-                elseif GV.planet in ["Venus, Earth"]
+                elseif GV.planet in ["Venus", "Earth"]
                     # get the eddy+molecular mixing velocities at the upper boundary of the atmosphere
                     v_upper_boundary_up = fluxcoef_dict[sp][end-1, # top cell of atmosphere
                                                             2]     # upward mixing velocity
@@ -1949,7 +1949,8 @@ function fluxcoefs(sp::Symbol, Kv, Dv, H0v; globvars...)
         dTdzl_p[1] = @. (GV.Tp[1] - 1) / GV.dz
         Hsl[1] = @. (1 + GV.Hs_dict[sp][1]) / 2.0
         H0l[1] = @. (1 + H0v[charge_type(sp)][1]) / 2.0
-    elseif GV.planet in ["Venus". "Earth"]
+
+    elseif GV.planet in ["Venus", "Earth"]
         # Downward transport away from the lower boundary layer, which is outside the model
         # These should never be used but we need to fill the array
         Dl[1] = Float64(NaN)
@@ -1983,17 +1984,6 @@ function fluxcoefs(sp::Symbol, Kv, Dv, H0v; globvars...)
         Hsu[end] = @. (GV.Hs_dict[sp][end] + 1) / 2.0
         H0u[end] = @. (H0v[charge_type(sp)][end] + 1) / 2.0
     elseif GV.planet in ["Venus", "Earth"]
-        # Upwards flux from the upper boundary layer, which is outside the model
-        # These should never be used but we need to fill the array
-        Du[end] = Float64(NaN)
-        Ku[end] = Float64(NaN)
-        Tu_n[end] = Float64(NaN)
-        Tu_p[end] = Float64(NaN)
-        dTdzu_n[end] = Float64(NaN)
-        dTdzu_p[end] = Float64(NaN)
-        Hsu[end] = Float64(NaN)
-        H0u[end] = Float64(NaN)
-    elseif GV.planet=="Mars"
         # Upwards flux from the upper boundary layer, which is outside the model
         # These should never be used but we need to fill the array
         Du[end] = Float64(NaN)
@@ -2104,7 +2094,7 @@ function Keddy(z::Vector, nt::Vector; globvars...)
     elseif GV.planet=="Venus"
         k = 8e12*(nt .^ -0.5)
     elseif GV.planet=="Earth"
-        k = 10e5 #wtf is the rest
+        k = 8e12*(nt .^ -0.5) #wtf is the rest
     end
 
     return k
