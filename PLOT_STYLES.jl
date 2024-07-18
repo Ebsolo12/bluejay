@@ -20,7 +20,7 @@
 sansserif_choice = "Arial"
 
 # Monospace font to use
-monospace_choice = "Andale Mono"
+monospace_choice = "Courier New"
 
 const speciescolor = Dict( # PRIMARY NEUTRALS + IONS
                     :CO2 =>"#000000", :CO2pl=>"#000000",
