@@ -62,7 +62,7 @@ const SA = 4*pi*(R_P)^2 # cm^2
 # ***************************************************************************************************** #
 
 remove_ignored_species = true # Whether to use a slightly smaller list of species and reactions (removing minor species that Roger had in his model)
-ignored_species = [:CNpl,:HCNpl,:HCNHpl,:HN2Opl,:NH2pl,:NH3pl,:N2Opl,:NO2pl,:CH,:CN,:HCN,:HNO,:NH,:NH2,:HD2pl]#:N2O,:NO2
+ignored_species = [:CNpl,:HCNpl,:HCNHpl,:HN2Opl,:NH2pl,:NH3pl,:CH,:CN,:HCN,:HNO,:NH,:NH2,:HD2pl]#
 
 #                                        Neutrals
 # =======================================================================================================
@@ -72,7 +72,7 @@ const orig_neutrals = [:Ar, :CO, :CO2, :H, :H2, :H2O, :H2O2,
                        :D, :DO2, :DOCO, :HD, :HDO, :HDO2, :OD,
 
                        # Turn these off for minimal ionosphere:
-                       :C, :DCO, :HCN, :HCO, :N, :NO, :Nup2D, 
+                       :C, :DCO, :HCN, :HCO, :N, :NO, :Nup2D, :N2O, :NO2
                        ]; 
 const conv_neutrals = remove_ignored_species==true ? setdiff(orig_neutrals, ignored_species) : orig_neutrals
 const new_neutrals = [];
@@ -87,7 +87,7 @@ const orig_ions = [:CO2pl, :HCO2pl, :Opl, :O2pl, # Nair minimal ionosphere
                    :H2Opl,  :HDOpl, :H3Opl, :H2DOpl, 
                    :HO2pl, :HCOpl, :DCOpl, :HOCpl, :DOCpl, :DCO2pl, 
                    :HNOpl,   
-                   :Npl, :NHpl, :N2pl, :N2Hpl, :N2Dpl, :NOpl,
+                   :Npl, :NHpl, :N2pl, :N2Hpl, :N2Dpl, :NOpl, :N2Opl, :NO2pl,
                    :OHpl, :ODpl];
 const new_ions = [];
 const ion_species = remove_ignored_species==true ? setdiff([orig_ions..., new_ions...], ignored_species) : [orig_ions..., new_ions...]
@@ -95,6 +95,9 @@ const nontherm = ions_included==true ? true : false   # whether to do non-therma
  
 #                                     Full species list
 # =======================================================================================================
+const new_species = [new_neutrals..., new_ions...]  # Needed later to be excluded from n_tot() as called 
+                                                    # in the water saturation calculation, in the case
+                                                    # where new species are being added.
 const all_species = [neutral_species..., ion_species...];
 
 
@@ -344,7 +347,7 @@ const H2Oi = findfirst(x->x==:H2O, active_longlived)
 const HDOi = findfirst(x->x==:HDO, active_longlived)
 
 # Altitude at which water transitions from fixed to freely solved for
-H2Osatfrac = H2Osat ./ map(z->n_tot(get_ncurrent(initial_atm_file), z; all_species, n_alt_index), alt)  # get SVP as fraction of total atmo
+H2Osatfrac = H2Osat ./ map(z->n_tot(get_ncurrent(initial_atm_file), z; all_species=setdiff(all_species, new_species), n_alt_index), alt)  # get SVP as fraction of total atmo
 const upper_lower_bdy = alt[something(findfirst(isequal(minimum(H2Osatfrac)), H2Osatfrac), 0)] # in cm
 const upper_lower_bdy_i = n_alt_index[upper_lower_bdy]  # the uppermost layer at which water will be fixed, in cm
 # Control whether the removal of rates etc at "Fixed altitudes" runs. If the boundary is 
@@ -495,16 +498,16 @@ end
 # Crosssection file sources
 # -------------------------------------------------------------------
 const photochem_data_files = Dict(:CO2=>Dict("main"=>"CO2.dat"), 
-                                   :H2O=>Dict("main"=>"h2oavgtbl.dat"), 
-                                   :HDO=>Dict("main"=>"HDO.dat"), 
-                                   :H2O2=>Dict("main"=>"H2O2.dat"), 
-                                   :HDO2=>Dict("main"=>"H2O2.dat"), 
-                                   :O3=>Dict("main"=>"O3.dat", "chapman"=>"O3Chap.dat"), 
-                                   :O2=>Dict("main"=>"O2.dat", "schr_short"=>"130-190.cf4", "schr_mid"=>"190-280.cf4", "schr_long"=>"280-500.cf4"), 
-                                   :H2=>Dict("main"=>"binnedH2.csv"), 
-                                   :HD=>Dict("main"=>"binnedH2.csv"), 
-                                   :OH=>Dict("main"=>"binnedOH.csv", "O1D+H"=>"binnedOHo1D.csv"), 
-                                   :OD=>Dict("main"=>"OD.csv"))
+                                  :H2O=>Dict("main"=>"h2oavgtbl.dat"), 
+                                  :HDO=>Dict("main"=>"HDO.dat"), 
+                                  :H2O2=>Dict("main"=>"H2O2.dat"), 
+                                  :HDO2=>Dict("main"=>"H2O2.dat"), 
+                                  :O3=>Dict("main"=>"O3.dat", "chapman"=>"O3Chap.dat"), 
+                                  :O2=>Dict("main"=>"O2.dat", "schr_short"=>"130-190.cf4", "schr_mid"=>"190-280.cf4", "schr_long"=>"280-500.cf4"), 
+                                  :H2=>Dict("main"=>"binnedH2.csv"), 
+                                  :HD=>Dict("main"=>"binnedH2.csv"), 
+                                  :OH=>Dict("main"=>"binnedOH.csv", "O1D+H"=>"binnedOHo1D.csv"), 
+                                  :OD=>Dict("main"=>"OD.csv"))
 
 # Filename tags and codes
 # -------------------------------------------------------------------
@@ -603,12 +606,6 @@ const error_checking_scheme = "new"
 # elseif problem_type != "Gear" && (ftype_ncur == Double64 || ftype_chem == Double64)
 #     println("problem_type != Gear but using Double64 in CUSTOMIZATIONS.jl")
 # end
-
-# ***************************************************************************************************** #
-#                                                                                                       #
-#                         Misc. things that depend on things defined above                              #
-#                                                                                                       #
-# ***************************************************************************************************** #
 
 # ***************************************************************************************************** #
 #                                                                                                       #

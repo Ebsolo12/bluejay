@@ -406,12 +406,12 @@ end
 
 function plot_Jrates(sp, atmdict::Dict{Symbol, Vector{ftype_ncur}}; savedir=nothing, opt="", globvars...)                
     #=
-    Plots the Jrates for each photodissociation or photoionizaiton reaction. Override for small groups of species.
+    Plots the Jrates for each photodissociation or photoionization reaction. Override for small groups of species.
     Input:
         sp: species for which to plot the Jrates
         atmdict: Present atmospheric state dictionary
-        savedir: directory in which to save the plots
         Optional:
+            savedir: directory in which to save the plots
             opt: Extra string for the filename
     Output:
         Plot of Jrates by altitude
@@ -437,7 +437,6 @@ function plot_Jrates(sp, atmdict::Dict{Symbol, Vector{ftype_ncur}}; savedir=noth
     
     # Collect chem production equations and total 
     if !isempty(keys(rxd_prod))
-        println("doing the thing")
         for kv in rxd_prod  # loop through the dict of format reaction => [rates by altitude]
             lbl = "$(kv[1])"
 
@@ -1282,7 +1281,7 @@ function top_mechanisms(x, sp, atmdict, p_or_r; savepath=nothing, filename_extra
     top5_rxn_strs = sorted_column_val.Reaction[1:L]
     
     for row in eachrow(sorted_column_val)[1:L]
-        ax.plot(by_alt_df[!, row.Reaction], plot_grid, label=string_to_latexstr(row.Reaction), linewidth=2)
+        ax.plot(by_alt_df[!, row.Reaction], GV.plot_grid, label=string_to_latexstr(row.Reaction), linewidth=2)
     end
     ax.legend(loc=(1.01, 0.5))
     
