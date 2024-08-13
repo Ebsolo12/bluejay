@@ -64,7 +64,7 @@ const temp_scenario = "mean"  # Temperature selection for the seasonal model run
 # Solar case
 # -------------------------------------------------------------------
 const SZA = 60  # Puts the model at dayside mean. Enter in degrees please.
-const solar_scenario = "solarmean" 
+const solar_scenario = "solarmax" 
     # Solar scenario definition. You can choose from different Mars-sun distances or parts of the solar cycle.
     # ORBITAL DISTANCE OPTIONS: "perihelion" #  "meansundist" # "aphelion"; these are defined at solar mean. 
     #     NOTE: these options are only available for Mars at present.

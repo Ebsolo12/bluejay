@@ -30,7 +30,7 @@ const speciescolor = Dict( # PRIMARY NEUTRALS + IONS
                     :HCO=> "#33bbf9", :HCOpl=>"#33bbf9", :DCO=> "#33bbf9", :DCOpl=>"#33bbf9",
                     :HOCpl=>"#c71a85", :DOCpl=>"#c71a85",
                     :HOCO =>"#667522", :DOCO =>"#667522", :HCO2pl=>"#667522", :DCO2pl=>"#667522",
-                    :O1D =>"#7c3b6b",
+                    :O1D =>"#7c3b6b", :O3P =>"#7c3b6b",
                     :O => "#7922b4", :Opl=>"#7922b4",
                     :O2 => "#1BAD53", :O2pl=>"#1BAD53",
                     :O3 =>"#1c4bb4",
@@ -48,21 +48,22 @@ const speciescolor = Dict( # PRIMARY NEUTRALS + IONS
 
 
                     # NITROGEN NEUTRALS + IONS
-                    :C=>"#d9c382",:Cpl=>"#d9c382",
-                    :CH=>"#cea3ce",:CHpl=>"#cea3ce",
-                    :CN=>"#6d5000",:CNpl=>"#6d5000",
-                    :HCN=>"#519169",:HCNpl=>"#519169",     
+                    :C=>"#d9c382",:Cpl=>"#d9c382", :C2=>"d9c382",
+                    :CH=>"#cea3ce",:CHpl=>"#cea3ce", :C2H=>"#cea3ce", :C2H2=>"#cea3ce", :C2H3=>"#cea3ce", :C2H4=>"#cea3ce", :C3H3=>"#cea3ce", :CH2=>"#cea3ce", :e3CH2=>"#cea3ce", :CH3=>"#cea3ce", :CH4=>"#cea3ce",
+                    :CN=>"#6d5000", :CN2=>"#6d5000",:CNpl=>"#6d5000", :C2N=>"#6d5000", :C2N2=>"#6d5000",
+                    :HCN=>"#519169",:HCNpl=>"#519169", :HNC=>"#519169", :H2CN=>"#519169", :CHCN=>"#519169", :CH2CN=>"#519169", :CH2NH=>"#519169",
                     #:HCNHpl=>"#1d3971",
                     :HNO=>"#ff1c5d",:HNOpl=>"#ff1c5d",
                     #:HN2Opl=>"#fb7562",
-                    :N=>"#6e748a",:Npl=>"#6e748a",
+                    :N=>"#6e748a",:Npl=>"#6e748a", 
                     :N2O=>"#ca9260",:N2Opl=>"#ca9260",
                     :NH=>"#059dc5",:NHpl=>"#059dc5", 
                     #:NH2=>"#0b522e",:NH2pl=>"#0b522e", 
                     #:NH3pl=>"#4ba40b", 
                     :NO=>"#e639b1",:NOpl=>"#e639b1",
                     :NO2=>"#a492e5", :NO2pl=>"#a492e5",  
-                    :N2Hpl=>"#611115",:N2Dpl=>"#611115", 
+                    :N2Hpl=>"#611115",:N2Dpl=>"#611115", :N2H2=>"#611115",
+                    :N4S=>"#7c3b6b", :N2D=>"#7c3b6b",
                     );
 
 # NOTE: Some code is repeated here below, also occurring in get_deuterated, to figure out which species are deuterated. 

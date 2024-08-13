@@ -1620,145 +1620,145 @@ Dcoef_arr_template = zeros(size(Tn_arr)) # initialize diffusion coefficient arra
 
 atm_soln = Dict()
 
-# try
-#     global atm_soln, sim_time = evolve_atmosphere(n_current, mindt, maxdt; t_to_save=times_to_save, abstol=atol, reltol=rel_tol, 
-#                                  # glob vars from here.  
-#                                  absorber, active_species, active_longlived, active_shortlived, all_species, alt, 
-#                                  collision_xsect, crosssection, Dcoef_arr_template, dt_incr_factor, dt_decr_factor, dz, 
-#                                  e_profile_type, error_checking_scheme, timestep_type, H2Oi, HDOi, 
-#                                  hot_H_network, hot_H_rc_funcs, hot_D_network, hot_D_rc_funcs, hot_H2_network, hot_H2_rc_funcs, hot_HD_network, hot_HD_rc_funcs,
-#                                  hrshortcode, Hs_dict,
-#                                  ion_species, inactive_species, Jratelist, logfile, M_P, molmass, monospace_choice, sansserif_choice,
-#                                  neutral_species, non_bdy_layers, num_layers, n_all_layers, n_alt_index, n_inactive, n_steps, 
-#                                  polarizability, planet, plot_grid, q, R_P, reaction_network, rshortcode, 
-#                                  season_length_in_sec, sol_in_sec, solarflux, speciesbclist, speciescolor, speciesstyle, 
-#                                  Tn=Tn_arr, Ti=Ti_arr, Te=Te_arr, Tp=Tplasma_arr, Tprof_for_diffusion, transport_species, opt="",
-#                                  upper_lower_bdy_i, use_ambipolar, use_molec_diff, zmax)
-# catch y
-#     XLSX.writetable(xlsx_parameter_log, param_df_dict...)
-#     write_to_log(logfile, "Terminated before completion at $(format_sec_or_min(time()-ti))", mode="a")
-#     throw("ERROR: Simulation terminated before completion with exception:")
-# end
+try
+    global atm_soln, sim_time = evolve_atmosphere(n_current, mindt, maxdt; t_to_save=times_to_save, abstol=atol, reltol=rel_tol, 
+                                 # glob vars from here.  
+                                 absorber, active_species, active_longlived, active_shortlived, all_species, alt, 
+                                 collision_xsect, crosssection, Dcoef_arr_template, dt_incr_factor, dt_decr_factor, dz, 
+                                 e_profile_type, error_checking_scheme, timestep_type, H2Oi, HDOi, 
+                                 hot_H_network, hot_H_rc_funcs, hot_D_network, hot_D_rc_funcs, hot_H2_network, hot_H2_rc_funcs, hot_HD_network, hot_HD_rc_funcs,
+                                 hrshortcode, Hs_dict,
+                                 ion_species, inactive_species, Jratelist, logfile, M_P, molmass, monospace_choice, sansserif_choice,
+                                 neutral_species, non_bdy_layers, num_layers, n_all_layers, n_alt_index, n_inactive, n_steps, 
+                                 polarizability, planet, plot_grid, q, R_P, reaction_network, rshortcode, 
+                                 season_length_in_sec, sol_in_sec, solarflux, speciesbclist, speciescolor, speciesstyle, 
+                                 Tn=Tn_arr, Ti=Ti_arr, Te=Te_arr, Tp=Tplasma_arr, Tprof_for_diffusion, transport_species, opt="",
+                                 upper_lower_bdy_i, use_ambipolar, use_molec_diff, zmax)
+catch y
+    XLSX.writetable(xlsx_parameter_log, param_df_dict...)
+    write_to_log(logfile, "Terminated before completion at $(format_sec_or_min(time()-ti))", mode="a")
+    throw("ERROR: Simulation terminated before completion with exception:")
+end
 
-# tf = time() 
+tf = time() 
 
-# write_to_log(logfile, "Finished!\nSimulation active convergence runtime $(format_sec_or_min(tf-ti))", mode="a")
+write_to_log(logfile, "Finished!\nSimulation active convergence runtime $(format_sec_or_min(tf-ti))", mode="a")
 
-# println("$(Dates.format(now(), "(HH:MM:SS)")) Simulation active convergence runtime $((tf-ti)/60) minutes")
+println("$(Dates.format(now(), "(HH:MM:SS)")) Simulation active convergence runtime $((tf-ti)/60) minutes")
 
-# # **************************************************************************** #
-# #                                                                              #
-# #                      WRITE OUT THE SIMULATION RESULTS                        #
-# #                                                                              #
-# # **************************************************************************** #
+# **************************************************************************** #
+#                                                                              #
+#                      WRITE OUT THE SIMULATION RESULTS                        #
+#                                                                              #
+# **************************************************************************** #
 
-# # ! NO GUARANTEE THAT SS AND ODE SOLVERS WORK RIGHT NOW !
-# if problem_type == "SS"
-#     # Update short-lived species one more time
-#     println("One last update of short-lived species")
-#     n_short = flatten_atm(external_storage, active_shortlived; num_layers)
-#     Jrates = deepcopy(Float64[external_storage[jr][ialt] for jr in Jratelist, ialt in 1:num_layers])
-#     set_concentrations!(external_storage, atm_soln.u, n_short, inactive, 
-#                         active_longlived, active_shortlived, inactive_species, Jrates, Tn_arr, Ti_arr, Te_arr)
-#     nc_all = merge(external_storage, unflatten_atm(atm_soln.u, active_longlived; num_layers))
+# ! NO GUARANTEE THAT SS AND ODE SOLVERS WORK RIGHT NOW !
+if problem_type == "SS"
+    # Update short-lived species one more time
+    println("One last update of short-lived species")
+    n_short = flatten_atm(external_storage, active_shortlived; num_layers)
+    Jrates = deepcopy(Float64[external_storage[jr][ialt] for jr in Jratelist, ialt in 1:num_layers])
+    set_concentrations!(external_storage, atm_soln.u, n_short, inactive, 
+                        active_longlived, active_shortlived, inactive_species, Jrates, Tn_arr, Ti_arr, Te_arr)
+    nc_all = merge(external_storage, unflatten_atm(atm_soln.u, active_longlived; num_layers))
 
-#     println("Plotting final atmosphere, writing out state")
-#     # Make final atmosphere plot
-#     plot_atm(nc_all, [neutral_species, ion_species], results_dir*sim_folder_name*"/final_atmosphere.png", t="final converged state", plot_grid, 
-#                       speciescolor, speciesstyle, monospace_choice, sansserif_choice, zmax, abs_tol_for_plot)
+    println("Plotting final atmosphere, writing out state")
+    # Make final atmosphere plot
+    plot_atm(nc_all, [neutral_species, ion_species], results_dir*sim_folder_name*"/final_atmosphere.png", t="final converged state", plot_grid, 
+                      speciescolor, speciesstyle, monospace_choice, sansserif_choice, zmax, abs_tol_for_plot)
 
 
-#     write_final_state(nc_all, results_dir, sim_folder_name, final_atm_file; alt, num_layers, hrshortcode, Jratedict=Jrates, rshortcode, external_storage)
-#     write_to_log(logfile, "$(Dates.format(now(), "(HH:MM:SS)")) Making production/loss plots", mode="a")
-#     println("Making production/loss plots (this tends to take several minutes)")
-#     plot_production_and_loss(nc_all, results_dir, sim_folder_name; nonthermal=nontherm, all_species, alt, chem_species, collision_xsect, 
-#                               dz, hot_D_rc_funcs, hot_H_rc_funcs, hot_H2_rc_funcs, hot_HD_rc_funcs, Hs_dict, 
-#                               hot_H_network, hot_D_network, hot_H2_network, hot_HD_network, hrshortcode, ion_species, Jratedict,
-#                               molmass, neutral_species, non_bdy_layers, num_layers, n_all_layers, n_alt_index, polarizability, 
-#                               plot_grid, q, rshortcode, reaction_network, speciesbclist, Tn=Tn_arr, Ti=Ti_arr, Te=Te_arr, Tp=Tplasma_arr, 
-#                               Tprof_for_Hs, Tprof_for_diffusion, transport_species, upper_lower_bdy_i, upper_lower_bdy, zmax)
-# elseif problem_type == "ODE"
+    write_final_state(nc_all, results_dir, sim_folder_name, final_atm_file; alt, num_layers, hrshortcode, Jratedict=Jrates, rshortcode, external_storage)
+    write_to_log(logfile, "$(Dates.format(now(), "(HH:MM:SS)")) Making production/loss plots", mode="a")
+    println("Making production/loss plots (this tends to take several minutes)")
+    plot_production_and_loss(nc_all, results_dir, sim_folder_name; nonthermal=nontherm, all_species, alt, chem_species, collision_xsect, 
+                              dz, hot_D_rc_funcs, hot_H_rc_funcs, hot_H2_rc_funcs, hot_HD_rc_funcs, Hs_dict, 
+                              hot_H_network, hot_D_network, hot_H2_network, hot_HD_network, hrshortcode, ion_species, Jratedict,
+                              molmass, neutral_species, non_bdy_layers, num_layers, n_all_layers, n_alt_index, polarizability, 
+                              plot_grid, q, rshortcode, reaction_network, speciesbclist, Tn=Tn_arr, Ti=Ti_arr, Te=Te_arr, Tp=Tplasma_arr, 
+                              Tprof_for_Hs, Tprof_for_diffusion, transport_species, upper_lower_bdy_i, upper_lower_bdy, zmax)
+elseif problem_type == "ODE"
 
-#     L = length(atm_soln.u)
-#     i = 1
-#     # Write all states to individual files.
-#     for (timestep, atm_state) in zip(atm_soln.t, atm_soln.u)
+    L = length(atm_soln.u)
+    i = 1
+    # Write all states to individual files.
+    for (timestep, atm_state) in zip(atm_soln.t, atm_soln.u)
 
-#         if i != L 
-#             # NOTE: This will eventually result in the final Jrates being written out at every timestep.
-#             # Currently there's no workaround for this and you just have to remember NOT TO TRUST Jrates
-#             # at any timestep except the very last. 
-#             # TODO: Fix this so we just don't write Jrates in these iterations...
-#             local nc_all = merge(external_storage, unflatten_atm(atm_state, active_longlived; num_layers))
-#             write_atmosphere(nc_all, results_dir*sim_folder_name*"/atm_state_t_$(timestep).h5"; alt, num_layers, hrshortcode, rshortcode) 
-#         elseif i == L
-#             # Update short-lived species one more time
-#             println("One last update of short-lived species")
-#             local n_short = flatten_atm(external_storage, active_shortlived; num_layers)
-#             local Jrates = deepcopy(Float64[external_storage[jr][ialt] for jr in Jratelist, ialt in 1:num_layers])
-#             set_concentrations!(external_storage, atm_state, n_short, inactive, Jrates; active_longlived, active_shortlived, 
-#                                inactive_species, Tn=Tn_arr, Ti=Ti_arr, Te=Te_arr, num_layers)
-#             local nc_all = merge(external_storage, unflatten_atm(atm_state, active_longlived; num_layers))
+        if i != L 
+            # NOTE: This will eventually result in the final Jrates being written out at every timestep.
+            # Currently there's no workaround for this and you just have to remember NOT TO TRUST Jrates
+            # at any timestep except the very last. 
+            # TODO: Fix this so we just don't write Jrates in these iterations...
+            local nc_all = merge(external_storage, unflatten_atm(atm_state, active_longlived; num_layers))
+            write_atmosphere(nc_all, results_dir*sim_folder_name*"/atm_state_t_$(timestep).h5"; alt, num_layers, hrshortcode, rshortcode) 
+        elseif i == L
+            # Update short-lived species one more time
+            println("One last update of short-lived species")
+            local n_short = flatten_atm(external_storage, active_shortlived; num_layers)
+            local Jrates = deepcopy(Float64[external_storage[jr][ialt] for jr in Jratelist, ialt in 1:num_layers])
+            set_concentrations!(external_storage, atm_state, n_short, inactive, Jrates; active_longlived, active_shortlived, 
+                               inactive_species, Tn=Tn_arr, Ti=Ti_arr, Te=Te_arr, num_layers)
+            local nc_all = merge(external_storage, unflatten_atm(atm_state, active_longlived; num_layers))
 
-#             # Make final atmosphere plot
-#             println("Plotting final atmosphere, writing out state")
-#             plot_atm(nc_all, results_dir*sim_folder_name*"/final_atmosphere.png", t="final converged state", abs_tol_for_plot; neutral_species, ion_species, 
-#                      plot_grid, speciescolor, speciesstyle, zmax, monospace_choice, sansserif_choice)
+            # Make final atmosphere plot
+            println("Plotting final atmosphere, writing out state")
+            plot_atm(nc_all, results_dir*sim_folder_name*"/final_atmosphere.png", t="final converged state", abs_tol_for_plot; neutral_species, ion_species, 
+                     plot_grid, speciescolor, speciesstyle, zmax, monospace_choice, sansserif_choice)
 
-#             write_final_state(nc_all, results_dir, sim_folder_name, final_atm_file; alt, num_layers, hrshortcode, Jratedict=Jrates, rshortcode, external_storage)
-#             write_to_log(logfile, "$(Dates.format(now(), "(HH:MM:SS)")) Making production/loss plots", mode="a")
-#             println("Making production/loss plots (this tends to take several minutes)")
-#             plot_production_and_loss(nc_all, results_dir, sim_folder_name; nonthermal=nontherm, all_species, alt, chem_species, collision_xsect, 
-#                                       dz, hot_D_rc_funcs, hot_H_rc_funcs, hot_H2_rc_funcs, hot_HD_rc_funcs, Hs_dict, 
-#                                       hot_H_network, hot_D_network, hot_H2_network, hot_HD_network, hrshortcode, ion_species, Jratedict,
-#                                       molmass, neutral_species, non_bdy_layers, num_layers, n_all_layers, n_alt_index, polarizability, 
-#                                       plot_grid, q, rshortcode, reaction_network, speciesbclist, Tn=Tn_arr, Ti=Ti_arr, Te=Te_arr, Tp=Tplasma_arr, 
-#                                       Tprof_for_Hs, Tprof_for_diffusion, transport_species, upper_lower_bdy_i, upper_lower_bdy, zmax)
+            write_final_state(nc_all, results_dir, sim_folder_name, final_atm_file; alt, num_layers, hrshortcode, Jratedict=Jrates, rshortcode, external_storage)
+            write_to_log(logfile, "$(Dates.format(now(), "(HH:MM:SS)")) Making production/loss plots", mode="a")
+            println("Making production/loss plots (this tends to take several minutes)")
+            plot_production_and_loss(nc_all, results_dir, sim_folder_name; nonthermal=nontherm, all_species, alt, chem_species, collision_xsect, 
+                                      dz, hot_D_rc_funcs, hot_H_rc_funcs, hot_H2_rc_funcs, hot_HD_rc_funcs, Hs_dict, 
+                                      hot_H_network, hot_D_network, hot_H2_network, hot_HD_network, hrshortcode, ion_species, Jratedict,
+                                      molmass, neutral_species, non_bdy_layers, num_layers, n_all_layers, n_alt_index, polarizability, 
+                                      plot_grid, q, rshortcode, reaction_network, speciesbclist, Tn=Tn_arr, Ti=Ti_arr, Te=Te_arr, Tp=Tplasma_arr, 
+                                      Tprof_for_Hs, Tprof_for_diffusion, transport_species, upper_lower_bdy_i, upper_lower_bdy, zmax)
 
-#         end
-#         global i += 1 
-#     end
-# elseif problem_type == "Gear"
-#     # Plot the final atmospheric state
-#     println("Plotting final atmosphere, writing out state")
-#     final_E_profile = electron_density(atm_soln; e_profile_type, non_bdy_layers, ion_species)   
-#     plot_atm(atm_soln, results_dir*sim_folder_name*"/final_atmosphere.png", abs_tol_for_plot, final_E_profile; ylims=[zmin/1e5, zmax/1e5],
-#              t="final converged state, total time = $(sim_time)", neutral_species, ion_species, plot_grid, speciescolor, speciesstyle, zmax, hrshortcode, rshortcode,
-#              monospace_choice, sansserif_choice)
+        end
+        global i += 1 
+    end
+elseif problem_type == "Gear"
+    # Plot the final atmospheric state
+    println("Plotting final atmosphere, writing out state")
+    final_E_profile = electron_density(atm_soln; e_profile_type, non_bdy_layers, ion_species)   
+    plot_atm(atm_soln, results_dir*sim_folder_name*"/final_atmosphere.png", abs_tol_for_plot, final_E_profile; ylims=[zmin/1e5, zmax/1e5],
+             t="final converged state, total time = $(sim_time)", neutral_species, ion_species, plot_grid, speciescolor, speciesstyle, zmax, hrshortcode, rshortcode,
+             monospace_choice, sansserif_choice)
 
-#     # Collect the J rates
-#     Jratedict = Dict{Symbol, Vector{Float64}}([j=>external_storage[j] for j in keys(external_storage) if occursin("J", string(j))])
+    # Collect the J rates
+    Jratedict = Dict{Symbol, Vector{Float64}}([j=>external_storage[j] for j in keys(external_storage) if occursin("J", string(j))])
 
-#     # Write out the final state to a unique file for easy finding
-#     write_final_state(atm_soln, results_dir, sim_folder_name, final_atm_file; alt, num_layers, hrshortcode, Jratedict, rshortcode, external_storage)
+    # Write out the final state to a unique file for easy finding
+    write_final_state(atm_soln, results_dir, sim_folder_name, final_atm_file; alt, num_layers, hrshortcode, Jratedict, rshortcode, external_storage)
 
-#     # Write out the final column rates to the reaction log
-#     calculate_and_write_column_rates(used_rxns_spreadsheet_name, atm_soln; all_species, dz, ion_species, num_layers, reaction_network, results_dir, sim_folder_name, 
-#                                                               Tn=Tn_arr[2:end-1], Ti=Ti_arr[2:end-1], Te=Te_arr[2:end-1])
+    # Write out the final column rates to the reaction log
+    calculate_and_write_column_rates(used_rxns_spreadsheet_name, atm_soln; all_species, dz, ion_species, num_layers, reaction_network, results_dir, sim_folder_name, 
+                                                              Tn=Tn_arr[2:end-1], Ti=Ti_arr[2:end-1], Te=Te_arr[2:end-1])
     
-#     write_to_log(logfile, "$(Dates.format(now(), "(HH:MM:SS)")) Making production/loss plots", mode="a")
-#     println("$(Dates.format(now(), "(HH:MM:SS)")) Making production/loss plots (this tends to take several minutes)")
-#     # make production and loss plots
-#     if make_P_and_L_plots
-#         plot_production_and_loss(atm_soln, results_dir, sim_folder_name; nonthermal=nontherm, all_species, alt, chem_species, collision_xsect, 
-#                                   dz, hot_D_rc_funcs, hot_H_rc_funcs, hot_H2_rc_funcs, hot_HD_rc_funcs, Hs_dict, 
-#                                   hot_H_network, hot_D_network, hot_H2_network, hot_HD_network, hrshortcode, ion_species, Jratedict, M_P, 
-#                                   molmass, monospace_choice, neutral_species, non_bdy_layers, num_layers, n_all_layers, n_alt_index, polarizability, planet,
-#                                   plot_grid, q, R_P, rshortcode, reaction_network, sansserif_choice, speciesbclist, Tn=Tn_arr, Ti=Ti_arr, Te=Te_arr, Tp=Tplasma_arr, 
-#                                   Tprof_for_Hs, Tprof_for_diffusion, transport_species, upper_lower_bdy_i, upper_lower_bdy, use_ambipolar, use_molec_diff, zmax)
-#     end
+    write_to_log(logfile, "$(Dates.format(now(), "(HH:MM:SS)")) Making production/loss plots", mode="a")
+    println("$(Dates.format(now(), "(HH:MM:SS)")) Making production/loss plots (this tends to take several minutes)")
+    # make production and loss plots
+    if make_P_and_L_plots
+        plot_production_and_loss(atm_soln, results_dir, sim_folder_name; nonthermal=nontherm, all_species, alt, chem_species, collision_xsect, 
+                                  dz, hot_D_rc_funcs, hot_H_rc_funcs, hot_H2_rc_funcs, hot_HD_rc_funcs, Hs_dict, 
+                                  hot_H_network, hot_D_network, hot_H2_network, hot_HD_network, hrshortcode, ion_species, Jratedict, M_P, 
+                                  molmass, monospace_choice, neutral_species, non_bdy_layers, num_layers, n_all_layers, n_alt_index, polarizability, planet,
+                                  plot_grid, q, R_P, rshortcode, reaction_network, sansserif_choice, speciesbclist, Tn=Tn_arr, Ti=Ti_arr, Te=Te_arr, Tp=Tplasma_arr, 
+                                  Tprof_for_Hs, Tprof_for_diffusion, transport_species, upper_lower_bdy_i, upper_lower_bdy, use_ambipolar, use_molec_diff, zmax)
+    end
 
-# else
-#     throw("Invalid problem_type")
-# end 
+else
+    throw("Invalid problem_type")
+end 
 
-# t7 = time()
+t7 = time()
 
-# # Write out the parameters as the final step 
+# Write out the parameters as the final step 
 
-# XLSX.writetable(xlsx_parameter_log, param_df_dict...)
+XLSX.writetable(xlsx_parameter_log, param_df_dict...)
 
-# println("Saved parameter spreadsheet")
-# write_to_log(logfile, "Simulation total runtime $(format_sec_or_min(t7-t1))", mode="a")
-# println("Simulation finished!")
+println("Saved parameter spreadsheet")
+write_to_log(logfile, "Simulation total runtime $(format_sec_or_min(t7-t1))", mode="a")
+println("Simulation finished!")
 
