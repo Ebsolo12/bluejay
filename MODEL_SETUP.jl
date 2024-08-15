@@ -70,14 +70,17 @@ const orig_neutrals = [:Ar, :CO, :CO2, :H, :H2, :H2O, :H2O2,
                        :HO2, :HOCO, :N2, 
                        :O, :O1D, :O2, :O3, :OH,
                        :D, :DO2, :DOCO, :HD, :HDO, :HDO2, :OD,
-                        :Cl, :ClO, :HCl, :ClCO, :DCl,
-                        :S, :SO, :SO2, :SO3, :H2SO4, :HDSO4,
+                        
                         :N2O, :NO2,
                        # Turn these off for minimal ionosphere:
                        :C,  :HCN, :HCO, :N, :NO,  
                        ]; 
 const conv_neutrals = remove_ignored_species==true ? setdiff(orig_neutrals, ignored_species) : orig_neutrals
-const new_neutrals = [];
+const new_neutrals = [:Cl, :ClO, :HCl, :ClCO, :DCl,
+:S, :SO, :SO2, :SO3, :H2SO4, :HDSO4,
+:e3CH2, :CH2, :CH3, :CH3O, :CH4, :C2H2, :C2H3, :C2H4, :C3H3, :C2H, 
+:N4S, :N2D, :O1D, :O3P, :HCN, :HCO, :N, :NO, :N2O, :NO2, :C, :N2, :HNC, :H2CN, :CH2NH, :N2H2, :CN2, :CH2CN, 
+:H2CO, :NCO, :HNCO];
 const neutral_species = [conv_neutrals..., new_neutrals...];
 
 #                                          Ions
@@ -92,9 +95,7 @@ const orig_ions = [:CO2pl, :HCO2pl, :Opl, :O2pl, # Nair minimal ionosphere
                    :Npl, :NHpl, :N2pl, :N2Hpl, :N2Dpl, :NOpl, :N2Opl, :NO2pl,
                    :OHpl, :ODpl];
 
-const new_ions = [:e3CH2, :CH2, :CH3, :CH4, :C2H2, :C2H3, :C2H4, :C3H3, :C2H, 
-                  Symbol("N(4S)"), :HNC, :H2CN, :CH2NH, :N2H2, :CN2, :CH2CN, 
-                  :H2CO, Symbol("O(3P)"), Symbol("O(1D)"), :CH3O, :NCO, :HNCO   ];
+const new_ions = [   ];
 const ion_species = remove_ignored_species==true ? setdiff([orig_ions..., new_ions...], ignored_species) : [orig_ions..., new_ions...]
 const nontherm = ions_included==true ? true : false   # whether to do non-thermal escape; this has to be here because it's needed in short order to do Jrates.
  

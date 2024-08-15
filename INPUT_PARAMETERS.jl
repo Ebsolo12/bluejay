@@ -16,7 +16,7 @@ const planet = "Earth"
 # Input and output files, directory
 # =======================================================================================================
 const results_dir = code_dir*"../Results_$(planet)/"
-const initial_atm_file = "$(planet)-Inputs/made DpHCltoHDpCl mass scale.h5"  # File to use to initialize the atmosphere.
+const initial_atm_file = "$(planet)-Inputs/" * "INITIAL_GUESS.h5" # File to use to initialize the atmosphere. 
     # OPTIONS: 
     # INITIAL_GUESS_MARS.h5 --> Basic Mars starting file.
     # INITIAL_GUESS_MARS_bxz4YnHk.h5 --> A Mars atmosphere that includes N2O, NO2, and their ions;
@@ -115,9 +115,9 @@ const abs_tol = 1e-12
 # =======================================================================================================
 const do_chem = true   # Turning this or next one of will toggle chemistry or transport.
 const do_trans = true  # Often useful for troubleshooting or converging new atmospheres.
-const adding_new_species = false
+const adding_new_species = true
 const make_new_alt_grid = false  # Set to true if extending the altitude grid. TODO: Need to re-write that code.
-const use_nonzero_initial_profiles = true
+const use_nonzero_initial_profiles = false 
     # OPTIONS: 
     # true -- uses initial guess densities for species based on previous model output.
     # false -- sets species to zero density and lets the chemistry and transport build them up.
