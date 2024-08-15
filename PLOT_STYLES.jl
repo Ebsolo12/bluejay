@@ -17,7 +17,7 @@
 # ***************************************************************************************************** #
 
 # Sans-serif font to use 
-sansserif_choice = "Arial"
+sansserif_choice = "Louis George Caf?"
 
 # Monospace font to use
 monospace_choice = "Courier New"
@@ -62,8 +62,7 @@ const speciescolor = Dict( # PRIMARY NEUTRALS + IONS
                     #:NH3pl=>"#4ba40b", 
                     :NO=>"#e639b1",:NOpl=>"#e639b1",
                     :NO2=>"#a492e5", :NO2pl=>"#a492e5",  
-                    :N2Hpl=>"#611115",:N2Dpl=>"#611115", :N2H2=>"#611115",
-                    :N4S=>"#7c3b6b", :N2D=>"#7c3b6b",
+                    :N2Hpl=>"#611115",:N2Dpl=>"#611115", 
                     );
 
 # NOTE: Some code is repeated here below, also occurring in get_deuterated, to figure out which species are deuterated. 

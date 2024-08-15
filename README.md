@@ -111,6 +111,7 @@ The Photochemistry module contains several submodules:
   - Water profile handling
   - `escape_probability()`: This will require new parameters for H and D escape that need to be calculated in a Monte Carlo particle transport model. Currently in May 2024 Bethan Gregory is responsible for this.
 6. You will need to generate a new initial guess of the atmosphere and feed it in as (e.g.) `INITIAL_GUESS.h5` You can use any method to do this. Suggestions include: Set the principal component of the atmosphere (e.g. CO2 on Mars) to be a constant value roughly what it is at the surface, and zero out all other species and let the model build them up; collect numbers from existing published works and use those.
+7. If you need to remove any species that aren't relevant, delete these from `orig_ions` and `orig_neutrals`, and ensure your initial guess file doesn't contain any profiles for them.
 
 **If adding new chemical species**:
 This list may be incomplete. If you discover a necessary step that isn't written here, please open a Github issue.
@@ -125,7 +126,8 @@ This list may be incomplete. If you discover a necessary step that isn't written
   - Add the reactions under the Photodissociation and Photoionization tabs in the reaction network spreadsheet, setting their status to 'New' for the first run.
   - Obtain the cross sections for each reaction as a function of wavelength, binned in half-integer steps (0.5, 1.5, 2.5 etc nm), and save as a .csv or .dat file in the `uvxsect` folder with the symbolic representation of the reaction as the filename (e.g. JH2OtoH2pO1D; where p means a regular plus sign and pl means a superscript plus for ions).
   - Add the reactant and product lists to the `reactant_product_sets` in `Crosssections.jl` under the `populate_xsect_dict()` function.
-9. Converge a new atmosphere with the new species. Once successful:
+9. Add the enthalpies of formation of the species to the spreadsheet `Enthalpies_of_Formation.xlsx`, using one of the existing sources in the spreadsheet or any reputable database.
+10. Converge a new atmosphere with the new species. Once successful:
   - Save the output `final_atmosphere.h5` as the new initial guess file for that planet
   - Set the newly introduced photodissociation/photoionization reactions to "Conv" in the "Status" column of the appropriate tabs within the reaction network spreadsheet
   - Set `adding_new_species` variable in `INPUT_PARAMETERS`.jl to false.
