@@ -974,6 +974,7 @@ reations that only PRODUCE the given species, because they have been marked
 as such in the reaction spreadsheet. 
 =#
 println("$(Dates.format(now(), "(HH:MM:SS)")) Loading reaction network")
+
 reaction_network, hot_H_network, hot_D_network, 
 hot_H2_network, hot_HD_network = load_reaction_network(reaction_network_spreadsheet; saveloc=results_dir*sim_folder_name*"/$(used_rxns_spreadsheet_name)",
                                                                        write_rxns=true, get_hot_rxns=ions_included, ions_on=ions_included, all_species)

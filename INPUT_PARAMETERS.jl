@@ -92,7 +92,7 @@ const HDO_excess = 0.350 # excess HDO in ppm (divide by 1000 to get ppb)
 
 # Settings to control species in the model
 # -------------------------------------------------------------------
-const ions_included = true
+const ions_included = false
 const converge_which = "both"
     # OPTIONS: "ions", "neutrals", "both"
 const dont_compute_chemistry = [:Ar]

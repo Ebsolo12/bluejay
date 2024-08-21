@@ -62,7 +62,7 @@ const SA = 4*pi*(R_P)^2 # cm^2
 # ***************************************************************************************************** #
 
 remove_ignored_species = true # Whether to use a slightly smaller list of species and reactions (removing minor species that Roger had in his model)
-ignored_species = [:CNpl,:HCNpl,:HCNHpl,:HN2Opl,:NH2pl,:NH3pl,:N2Opl,:NO2pl,:HD2pl]#:N2O,:NO2, :CH,:CN,:HCN,:HNO,:NH,:NH2,
+ignored_species = [:CNpl,:HCNpl,:HCNHpl,:HN2Opl,:NH2pl,:NH3pl,:N2Opl,:NO2pl,:HD2pl, :ArDpl, :ArHpl, :Arpl]#:N2O,:NO2, :CH,:CN,:HCN,:HNO,:NH,:NH2,
 
 #                                        Neutrals
 # =======================================================================================================
@@ -79,7 +79,7 @@ const conv_neutrals = remove_ignored_species==true ? setdiff(orig_neutrals, igno
 const new_neutrals = [:Cl, :ClO, :HCl, :ClCO, :DCl,
 :S, :SO, :SO2, :SO3, :H2SO4, :HDSO4,
 :e3CH2, :CH2, :CH3, :CH3O, :CH4, :C2H2, :C2H3, :C2H4, :C3H3, :C2H, 
-:N4S, :N2D, :O1D, :O3P, :HCN, :HCO, :N, :NO, :N2O, :NO2, :C, :N2, :HNC, :H2CN, :CH2NH, :N2H2, :CN2, :CH2CN, 
+:N4S, :N2D, :O1D, :O3P, :HCN, :HCO, :N, :NH, :NH2,:NO, :N2O, :NO2, :C, :N2, :HNC, :H2CN, :CH2NH, :N2H2, :CN2, :CH2CN, 
 :H2CO, :NCO, :HNCO];
 const neutral_species = [conv_neutrals..., new_neutrals...];
 

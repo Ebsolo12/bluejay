@@ -1101,5 +1101,3 @@ function modify_rxn_spreadsheet(spreadsheet; new_file="REACTION_NETWORK_NEW.xlsx
         log_reactions(df_to_write, sheet, new_file)
     end
 end
-
-
