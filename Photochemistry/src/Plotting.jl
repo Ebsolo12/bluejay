@@ -133,7 +133,7 @@ function plot_atm(atmdict::Dict{Symbol, Vector{ftype_ncur}}, savepath::String, a
                                 :H2O2,:HDO2,
                                 :HO2,:HO2pl,:DO2,
                                 :OH,:OHpl,:OD,:ODpl],
-                            # NITROGEN NEUTRALS + IONS, RARE C MOLECULES, and Chlorine 
+                            # NITROGEN NEUTRALS + IONS, RARE C MOLECULES, CHLORINE, SULFUR
                             3=>[:C,:Cpl,:CH,:CHpl,
                                 :CN,:CNpl,:HCN,:HCNpl,:HCNHpl,
                                 :HNO,:HNOpl,:HN2Opl,
@@ -1070,7 +1070,7 @@ function plot_temp_prof(Tprof_1; opt="", cols=[medgray, "xkcd:bright orange", "c
     ax.set_ylabel("Altitude [km]")
     ax.set_yticks(collect(0:50:Int64(GV.alt[end]/1e5)))
     ax.set_xlabel("Temperature [K]")
-    ax.set_xlim(95, 2e3)
+    # ax.set_xlim(95, 2e3)
     ax.tick_params(which="both", axis="x", top=true, labeltop=true)
 
     if showonly==true
@@ -1084,7 +1084,7 @@ function plot_temp_prof(Tprof_1; opt="", cols=[medgray, "xkcd:bright orange", "c
     end
 end
 
-function plot_tophot_lineandbar(atmdict, spreadsheet; N=5, savepath=nothing, draw_arrow=true, lower_ylim=125, globvars...) 
+function plot_tophot_lineandbar(atmdict, spreadsheet; N=5, savepath=nothing, draw_arrow=true, title=nothing, lower_ylim=125, globvars...) 
     #=
     Input:
         atmdict: Atmospheric state dictionary
@@ -1170,7 +1170,7 @@ function plot_tophot_lineandbar(atmdict, spreadsheet; N=5, savepath=nothing, dra
                       width=0.25, length=2, pad=2)
     ax[1].set_xlabel(L"Escaping atom production rate (cm$^{-3}$ s$^{-1}$)")
     ax[1].set_xscale("log")
-    ax[1].set_xlim(1e-4, 1e1) # H plot limits
+    ax[1].set_xlim(1e-4, 2e1) # H plot limits
     ax[1].xaxis.set_major_locator(matplotlib.ticker.LogLocator(base=10.0, numticks=10))
     locmin = matplotlib.ticker.LogLocator(base=10.0,subs=(0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9), numticks=10)
     ax[1].xaxis.set_minor_locator(locmin)
@@ -1213,9 +1213,6 @@ function plot_tophot_lineandbar(atmdict, spreadsheet; N=5, savepath=nothing, dra
     
     rcParams["hatch.linewidth"] = 1
     rcParams["hatch.color"] = "magenta"
-    flush(stdout)
-    println("RR panel ok")
-    flush(stdout)
 
     # NOW DO THE BAR CHART SET 
     # ==========================================================================================
@@ -1227,7 +1224,7 @@ function plot_tophot_lineandbar(atmdict, spreadsheet; N=5, savepath=nothing, dra
     plot_bg(ax[2])
     ax[2].tick_params(which="both", left=false, labelleft=false, top=true,
                       width=0.25, length=2, pad=2)
-    ax[2].set_xlim(3e1, 3e7)
+    ax[2].set_xlim(3e1, 4e7)
     ax[2].set_xscale("log")
     ax[2].xaxis.set_major_locator(matplotlib.ticker.LogLocator(base=10.0, numticks=10))
     locmin = matplotlib.ticker.LogLocator(base=10.0,subs=(0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9),numticks=10)
@@ -1286,6 +1283,10 @@ function plot_tophot_lineandbar(atmdict, spreadsheet; N=5, savepath=nothing, dra
         xytext=(-62.5,0), textcoords="offset points",
         ha="left", va="center_baseline")
     
+    # Set title
+    if title != nothing
+        suptitle(title)
+    end
     if savepath==nothing
         show()
     else

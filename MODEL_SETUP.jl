@@ -6,7 +6,7 @@
 # 
 # Eryn Cangi
 # Created April 2024
-# Last edited: May 2024
+# Last edited: August 2024
 # Currently tested for Julia: 1.8.5
 ################################################################################
 
@@ -61,6 +61,7 @@ const SA = 4*pi*(R_P)^2 # cm^2
 #                                                                                                       #
 # ***************************************************************************************************** #
 
+<<<<<<< HEAD
 remove_ignored_species = true # Whether to use a slightly smaller list of species and reactions (removing minor species that Roger had in his model)
 ignored_species = [:CNpl,:HCNpl,:HCNHpl,:HN2Opl,:NH2pl,:NH3pl,:N2Opl,:NO2pl,:HD2pl, :ArDpl, :ArHpl, :Arpl]#:N2O,:NO2, :CH,:CN,:HCN,:HNO,:NH,:NH2,
 
@@ -83,18 +84,23 @@ const orig_ions = [];
 const new_ions = [   ];
 const ion_species = remove_ignored_species==true ? setdiff([orig_ions..., new_ions...], ignored_species) : [orig_ions..., new_ions...]
 const nontherm = ions_included==true ? true : false   # whether to do non-thermal escape; this has to be here because it's needed in short order to do Jrates.
+=======
+# Minor species that have reactions available in the network files, but aren't used. These are just for
+# reference: [:CNpl,:HCNpl,:HCNHpl,:HN2Opl,:NH2pl,:NH3pl,:CH,:CN,:HCN,:HNO,:NH,:NH2,:HD2pl]
+>>>>>>> upstream/master
  
 #                                     Full species list
 # =======================================================================================================
+const neutral_species = [conv_neutrals[planet]..., new_neutrals...];
+const ion_species = [conv_ions[planet]..., new_ions...]
 const new_species = [new_neutrals..., new_ions...]  # Needed later to be excluded from n_tot() as called 
                                                     # in the water saturation calculation, in the case
                                                     # where new species are being added.
 const all_species = [neutral_species..., ion_species...];
 
-
 #                        Photolysis and Photoionization rate symbol lists 
 # =======================================================================================================
-
+const nontherm = ions_included==true ? true : false   # whether to do non-thermal escape. Must be here, sued in call to format Jrates
 const conv_Jrates, newJrates = format_Jrates(reaction_network_spreadsheet, all_species, "Jratelist"; ions_on=ions_included, hot_atoms=nontherm)
 const Jratelist = [conv_Jrates..., newJrates...];
 
@@ -303,20 +309,40 @@ end
 # Water mixing ratios to use
 if planet=="Mars"
     const water_MRs = Dict("loweratmo"=>Dict("standard"=>1.3e-4, "low"=>0.65e-4, "high"=>2.6e-4), 
-                       "mesosphere"=>Dict("standard"=>1.3e-4, "high"=>1.3e-4, "low"=>1.3e-4), 
-                       "everywhere"=>Dict("standard"=>1.3e-4, "high"=>1.3e-4, "low"=>1.3e-4))
+                           "mesosphere"=>Dict("standard"=>1.3e-4, "high"=>1.3e-4, "low"=>1.3e-4), 
+                           "everywhere"=>Dict("standard"=>1.3e-4, "high"=>1.3e-4, "low"=>1.3e-4))
     const water_mixing_ratio = water_MRs[water_loc][water_case]
 elseif planet=="Venus"
     const water_mixing_ratio = Dict("standard"=>1e-6)[water_case]  # parse(Float64, water_case) 
+<<<<<<< HEAD
 elseif planet=="Earth"
     const water_mixing_ratio = Dict("standard"=>1e-6)[water_case]  # parse(Float64, water_case) 
+=======
+
+    # SPECIAL: Crazy water Mahieux & Viscardy 2024
+    if venus_special_water
+        const h2o_vmr_low = 10^0.3 * 1e-6
+        const h2o_vmr_high = 10^0.7 * 1e-6
+        const hdo_vmr_low = 10^(-0.5)  * 1e-6
+        const hdo_vmr_high = 10^(0.5) * 1e-6
+    else
+        const h2o_vmr_low = water_mixing_ratio
+        const h2o_vmr_high = nothing
+        const hdo_vmr_low = 2*DH*water_mixing_ratio
+        const hdo_vmr_high = nothing
+    end
+>>>>>>> upstream/master
 end
 
 # Whether to install a whole new water profile or just use the initial guess with modifications (for seasonal model)
 if planet=="Venus"
+<<<<<<< HEAD
     const reinitialize_water_profile = false 
 elseif planet=="Earth"
     const reinitialize_water_profile = false 
+=======
+    const reinitialize_water_profile = venus_special_water==true ? true : false
+>>>>>>> upstream/master
 elseif planet=="Mars"
     const reinitialize_water_profile = seasonal_cycle==true ? false : true # should be off if trying to run simulations for seasons
 end
@@ -373,6 +399,12 @@ if planet=="Mars"
                        );
 elseif planet=="Venus"
     const ntot_at_lowerbdy = 9.5e15 # at 90 km
+
+    H2O_lowerbdy = h2o_vmr_low * ntot_at_lowerbdy
+    HDO_lowerbdy = hdo_vmr_low * ntot_at_lowerbdy
+    
+    # END SPECIAL
+    
     const KoverH_lowerbdy = Keddy([zmin], [ntot_at_lowerbdy]; planet)[1]/scaleH_lowerboundary(zmin, Tn_arr[1]; molmass, M_P, R_P, zmin)
     const manual_speciesbclist=Dict(# major species neutrals at lower boundary (estimated from Fox&Sung 2001, Hedin+1985, agrees pretty well with VIRA)
                                     :CO2=>Dict("n"=>[0.965*ntot_at_lowerbdy, NaN], "f"=>[NaN, 0.]),
@@ -435,9 +467,9 @@ elseif planet=="Earth"
                                     :SO2=>Dict("n"=>[1.0E-7 * ntot_at_lowerbdy, NaN]),
 
                                     # water mixing ratio is fixed at lower boundary
-                                    :H2O=>Dict("n"=>[water_mixing_ratio*ntot_at_lowerbdy, NaN], "f"=>[NaN, 0.]),
+                                    :H2O=>Dict("n"=>[H2O_lowerbdy, NaN], "f"=>[NaN, 0.]),
                                     # we assume HDO has the bulk atmosphere ratio with H2O at the lower boundary, ~consistent with Bertaux+2007 observations
-                                    :HDO=>Dict("n"=>[2*DH*water_mixing_ratio*ntot_at_lowerbdy, NaN], "f"=>[NaN, 0.]),
+                                    :HDO=>Dict("n"=>[HDO_lowerbdy, NaN], "f"=>[NaN, 0.]),
 
                                     # atomic H and D escape solely by photochemical loss to space, can also be mixed downward
                                     :H=> Dict("v"=>[-KoverH_lowerbdy, effusion_velocity(Tn_arr[end], 1.0; zmax, M_P, R_P)],
