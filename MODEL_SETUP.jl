@@ -66,34 +66,19 @@ ignored_species = [:CNpl,:HCNpl,:HCNHpl,:HN2Opl,:NH2pl,:NH3pl,:N2Opl,:NO2pl,:HD2
 
 #                                        Neutrals
 # =======================================================================================================
-const orig_neutrals = [:Ar, :CO, :CO2, :H, :H2, :H2O, :H2O2, 
-                       :HO2, :HOCO, :N2, 
-                       :O, :O1D, :O2, :O3, :OH,
-                       :D, :DO2, :DOCO, :HD, :HDO, :HDO2, :OD,
-                        
-                        :N2O, :NO2,
-                       # Turn these off for minimal ionosphere:
-                       :C,  :HCN, :HCO, :N, :NO,  
+const orig_neutrals = [  
                        ]; 
 const conv_neutrals = remove_ignored_species==true ? setdiff(orig_neutrals, ignored_species) : orig_neutrals
 const new_neutrals = [:Cl, :ClO, :HCl, :ClCO, :DCl,
 :S, :SO, :SO2, :SO3, :H2SO4, :HDSO4,
-:e3CH2, :CH2, :CH3, :CH3O, :CH4, :C2H2, :C2H3, :C2H4, :C3H3, :C2H, 
+:e3CH2, :CH, :CH2, :CH3, :CH3O, :CH4, :C2H2, :C2H3, :C2H4, :C3H3, :C2H, :H2,
 :N4S, :N2D, :O1D, :O3P, :HCN, :HCO, :N, :NH, :NH2,:NO, :N2O, :NO2, :C, :N2, :HNC, :H2CN, :CH2NH, :N2H2, :CN2, :CH2CN, 
 :H2CO, :NCO, :HNCO];
 const neutral_species = [conv_neutrals..., new_neutrals...];
 
 #                                          Ions
 # =======================================================================================================
-const orig_ions = [:CO2pl, :HCO2pl, :Opl, :O2pl, # Nair minimal ionosphere 
-                   :Arpl, :ArHpl, :ArDpl, 
-                   :Cpl, :CHpl,  :COpl, 
-                   :Hpl, :Dpl, :H2pl, :HDpl, :H3pl, :H2Dpl, :HD2pl, 
-                   :H2Opl,  :HDOpl, :H3Opl, :H2DOpl, 
-                   :HO2pl, :HCOpl, :DCOpl, :HOCpl, :DOCpl, :DCO2pl, 
-                   :HNOpl,   
-                   :Npl, :NHpl, :N2pl, :N2Hpl, :N2Dpl, :NOpl, :N2Opl, :NO2pl,
-                   :OHpl, :ODpl];
+const orig_ions = [];
 
 const new_ions = [   ];
 const ion_species = remove_ignored_species==true ? setdiff([orig_ions..., new_ions...], ignored_species) : [orig_ions..., new_ions...]
