@@ -61,33 +61,8 @@ const SA = 4*pi*(R_P)^2 # cm^2
 #                                                                                                       #
 # ***************************************************************************************************** #
 
-<<<<<<< HEAD
-remove_ignored_species = true # Whether to use a slightly smaller list of species and reactions (removing minor species that Roger had in his model)
-ignored_species = [:CNpl,:HCNpl,:HCNHpl,:HN2Opl,:NH2pl,:NH3pl,:N2Opl,:NO2pl,:HD2pl, :ArDpl, :ArHpl, :Arpl]#:N2O,:NO2, :CH,:CN,:HCN,:HNO,:NH,:NH2,
-
-#                                        Neutrals
-# =======================================================================================================
-const orig_neutrals = [  
-                       ]; 
-const conv_neutrals = remove_ignored_species==true ? setdiff(orig_neutrals, ignored_species) : orig_neutrals
-const new_neutrals = [:Cl, :ClO, :HCl, :ClCO, :DCl,
-:S, :SO, :SO2, :SO3, :H2SO4, :HDSO4,
-:e3CH2, :CH, :CH2, :CH3, :CH3O, :CH4, :C2H2, :C2H3, :C2H4, :C3H3, :C2H, :H2,
-:N4S, :N2D, :O1D, :O3P, :HCN, :HCO, :N, :NH, :NH2,:NO, :N2O, :NO2, :C, :N2, :HNC, :H2CN, :CH2NH, :N2H2, :CN2, :CH2CN, 
-:H2CO, :NCO, :HNCO];
-const neutral_species = [conv_neutrals..., new_neutrals...];
-
-#                                          Ions
-# =======================================================================================================
-const orig_ions = [];
-
-const new_ions = [   ];
-const ion_species = remove_ignored_species==true ? setdiff([orig_ions..., new_ions...], ignored_species) : [orig_ions..., new_ions...]
-const nontherm = ions_included==true ? true : false   # whether to do non-thermal escape; this has to be here because it's needed in short order to do Jrates.
-=======
 # Minor species that have reactions available in the network files, but aren't used. These are just for
 # reference: [:CNpl,:HCNpl,:HCNHpl,:HN2Opl,:NH2pl,:NH3pl,:CH,:CN,:HCN,:HNO,:NH,:NH2,:HD2pl]
->>>>>>> upstream/master
  
 #                                     Full species list
 # =======================================================================================================
@@ -96,6 +71,7 @@ const ion_species = [conv_ions[planet]..., new_ions...]
 const new_species = [new_neutrals..., new_ions...]  # Needed later to be excluded from n_tot() as called 
                                                     # in the water saturation calculation, in the case
                                                     # where new species are being added.
+
 const all_species = [neutral_species..., ion_species...];
 
 #                        Photolysis and Photoionization rate symbol lists 
@@ -179,14 +155,13 @@ end
 
 const chem_species = setdiff(all_species, no_chem_species);
 const transport_species = setdiff(all_species, no_transport_species);
-
 # Active and inactive species 
 # -------------------------------------------------------------------
 const active_species = union(chem_species, transport_species)
 const inactive_species = intersect(no_chem_species, no_transport_species)
 const active_longlived = intersect(active_species, long_lived_species)
 const active_shortlived = intersect(active_species, short_lived_species)
-
+println(typeof(inactive_species))
 # Sort name lists created here
 # -------------------------------------------------------------------
 sort!(all_species)
@@ -314,10 +289,6 @@ if planet=="Mars"
     const water_mixing_ratio = water_MRs[water_loc][water_case]
 elseif planet=="Venus"
     const water_mixing_ratio = Dict("standard"=>1e-6)[water_case]  # parse(Float64, water_case) 
-<<<<<<< HEAD
-elseif planet=="Earth"
-    const water_mixing_ratio = Dict("standard"=>1e-6)[water_case]  # parse(Float64, water_case) 
-=======
 
     # SPECIAL: Crazy water Mahieux & Viscardy 2024
     if venus_special_water
@@ -331,20 +302,17 @@ elseif planet=="Earth"
         const hdo_vmr_low = 2*DH*water_mixing_ratio
         const hdo_vmr_high = nothing
     end
->>>>>>> upstream/master
+elseif planet=="Earth"
+    const water_mixing_ratio = Dict("standard"=>1e-6)[water_case]
 end
 
 # Whether to install a whole new water profile or just use the initial guess with modifications (for seasonal model)
 if planet=="Venus"
-<<<<<<< HEAD
-    const reinitialize_water_profile = false 
-elseif planet=="Earth"
-    const reinitialize_water_profile = false 
-=======
     const reinitialize_water_profile = venus_special_water==true ? true : false
->>>>>>> upstream/master
 elseif planet=="Mars"
     const reinitialize_water_profile = seasonal_cycle==true ? false : true # should be off if trying to run simulations for seasons
+    elseif planet=="Earth"
+    const reinitialize_water_profile = false 
 end
 
 const update_water_profile = seasonal_cycle==true ? true : false # this is for modifying the profile during cycling, MAY be fixed?
@@ -453,37 +421,18 @@ elseif planet=="Venus"
 elseif planet=="Earth"
     const ntot_at_lowerbdy = 9.5e15 # at 90 km
     const KoverH_lowerbdy = Keddy([zmin], [ntot_at_lowerbdy]; planet)[1]/scaleH_lowerboundary(zmin, Tn_arr[1]; molmass, M_P, R_P, zmin)
-    const manual_speciesbclist=Dict(# major species neutrals at lower boundary (estimated from Fox&Sung 2001, Hedin+1985, agrees pretty well with VIRA)
-                                    :CO2=>Dict("n"=>[0.965*ntot_at_lowerbdy, NaN], "f"=>[NaN, 0.]),
-                                    :Ar=>Dict("n"=>[5e11, NaN], "f"=>[NaN, 0.]),
-                                    :CO=>Dict("n"=>[4.5e-6*ntot_at_lowerbdy, NaN], "f"=>[NaN, 0.]),
-                                    :O2=>Dict("n"=>[3e-3*ntot_at_lowerbdy, NaN], "f"=>[NaN, 0.]),
-                                    :N2=>Dict("n"=>[0.032*ntot_at_lowerbdy, NaN]),
-
-                                    #Krasnopolsky, 2010a: this was 400ppb at 74km in altitude, and the actual number is likely lower (is either 4.0E-7, or 4.8E-7 depending on the calculation); and according to Zhang 2012 it is 3.66e-7
-                                    :HCl=>Dict("n"=>[3.66e-7 * ntot_at_lowerbdy, NaN]),
-
-                                    #Denis A. Belyaev 2012: this was 0.1 ppmv at 165–170 K to 0.5–1 ppmv at 190–192 K; It said 0.1ppm was related to the most common temperature reading so I went with that (this is either 1E-7 or 6.79E-8 depending on the calculation)
-                                    :SO2=>Dict("n"=>[1.0E-7 * ntot_at_lowerbdy, NaN]),
-
-                                    # water mixing ratio is fixed at lower boundary
-                                    :H2O=>Dict("n"=>[H2O_lowerbdy, NaN], "f"=>[NaN, 0.]),
-                                    # we assume HDO has the bulk atmosphere ratio with H2O at the lower boundary, ~consistent with Bertaux+2007 observations
-                                    :HDO=>Dict("n"=>[HDO_lowerbdy, NaN], "f"=>[NaN, 0.]),
-
-                                    # atomic H and D escape solely by photochemical loss to space, can also be mixed downward
-                                    :H=> Dict("v"=>[-KoverH_lowerbdy, effusion_velocity(Tn_arr[end], 1.0; zmax, M_P, R_P)],
-                                                    #                 ^^^ other options here:
-                                                    #                 effusion_velocity(Tn_arr[end], 1.0; zmax) # thermal escape, negligible
-                                                    #                 100 # representing D transport to nightside, NOT escape
-                                                    #                 NaN # No thermal escape to space, appropriate for global average model
-                                              "ntf"=>[NaN, "see boundaryconditions()"]),
-                                    :D=> Dict("v"=>[-KoverH_lowerbdy, effusion_velocity(Tn_arr[end], 2.0; zmax, M_P, R_P)], # 
-                                                    #                 ^^^ other options here:
-                                                    #                  effusion_velocity(Tn_arr[end], 2.0; zmax) # thermal escape, negligible
-                                                    #                 100 # representing D transport to nightside, NOT escape
-                                                    #                 NaN # No thermal escape to space, appropriate for global average model
-                                              "ntf"=>[NaN, "see boundaryconditions()"]),
+    const manual_speciesbclist=Dict(:CO2=>Dict("n"=>[2.1e17, NaN], "f"=>[NaN, 0.]),
+                        :Ar=>Dict("n"=>[2.0e-2*2.1e17, NaN], "f"=>[NaN, 0.]),
+                        :N2=>Dict("n"=>[1.9e-2*2.1e17, NaN], "f"=>[NaN, 0.]),
+                        #:C=>Dict("f"=>[NaN, 4e5]), # NEW: Based on Lo 2021
+                        :H2O=>Dict("n"=>[H2Osat[1], NaN], "f"=>[NaN, 0.]), # bc doesnt matter if H2O fixed
+                        :HDO=>Dict("n"=>[HDOsat[1], NaN], "f"=>[NaN, 0.]),
+                        :O=> Dict("f"=>[0., 1.2e8]),
+                        :H2=>Dict("f"=>[0., NaN], "v"=>[NaN, effusion_velocity(Tn_arr[end], 2.0; M_P, R_P, zmax)], "ntf"=>[NaN, "see boundaryconditions()"]),  # velocities are in cm/s
+                        :HD=>Dict("f"=>[0., NaN], "v"=>[NaN, effusion_velocity(Tn_arr[end], 3.0; M_P, R_P, zmax)], "ntf"=>[NaN, "see boundaryconditions()"]),
+                        :H=> Dict("f"=>[0., NaN], "v"=>[NaN, effusion_velocity(Tn_arr[end], 1.0; M_P, R_P, zmax)], "ntf"=>[NaN, "see boundaryconditions()"]),
+                        :D=> Dict("f"=>[0., NaN], "v"=>[NaN, effusion_velocity(Tn_arr[end], 2.0; M_P, R_P, zmax)], "ntf"=>[NaN, "see boundaryconditions()"]),
+                       );
 
                                     # # H2 mixing ratio at lower boundary adopted from Yung&DeMore1982 as in Fox&Sung2001
                                     # :H2=>Dict("n"=>[1e-7*ntot_at_lowerbdy, NaN],
@@ -502,7 +451,7 @@ elseif planet=="Earth"
                                     #:Hpl=>Dict("v"=>[-KoverH_lowerbdy, 0.0 #=effusion_velocity(Ti_arr[end], 1.0; zmax)=#]),#, "f"=>[NaN, 1.6e7]),
                                     #:H2pl=>Dict("v"=>[-KoverH_lowerbdy, 0.0 #=effusion_velocity(Ti_arr[end], 2.0; zmax)=#]),#, "f"=>[NaN, 2e5]),
                                     #:Opl=>Dict("v"=>[-KoverH_lowerbdy, 2e5], ), # "f"=>[NaN, 2.1e8] # tends to cause hollowing out of atmosphere
-                                    );   
+                                       
                                  
 
     # add in downward mixing velocity boundary condition for all other species

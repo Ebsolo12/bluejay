@@ -2360,6 +2360,10 @@ function setup_water_profile!(atmdict; constfrac=1, dust_storm_on=false, make_sa
             atmdict[:H2O][1:n] = vmr_h2o .* ntot[1:n]
             atmdict[:HDO][1:n] = vmr_hdo .* ntot[1:n]
         end
+    elseif GV.planet=="Earth"
+        # TODO: Add a more interesting implementation as needed.
+        atmdict[:H2O] = constfrac .* n_tot(atmdict; GV.n_alt_index, GV.all_species)
+        atmdict[:HDO] = 2 * GV.DH * atmdict[:H2O]  
     end
 
     # Plot the water profile 

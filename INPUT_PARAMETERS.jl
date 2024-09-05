@@ -120,7 +120,11 @@ const HDO_excess = 0.350 # excess HDO in ppm (divide by 1000 to get ppb)
 #                       They should already have a density vector in your initial guess file. 
 #                       Typically you won't need to change these at each run, UNLESS you added new species 
 #                       on the previous run.
-const new_neutrals = [];
+const new_neutrals = [:H, :H2, 
+:C, :C2, :C2H, :CH, :CH2, :CH3, :CH4, :e3CH2, :C2H2, :C2H3, :C2H4, :C3H3, 
+:N2, :C2N2, :N4S, :N2D, :NH, :NH2, :NH3, :CN, :CHCN, :CH2CN, :HCN, :H2CN, :HNC, :HNO, 
+:NO, :N2O, :CN2, :C2N, :CH2NH, :N2H2, :C3N, 
+:O3P, :O1D, :CO, :HCO, :H2CO, :OH];
 const new_ions = [];
 
 const conv_neutrals = Dict("Mars"=>[:Ar, :C, :CO, :CO2, # Argon and carbon species
@@ -136,31 +140,39 @@ const conv_neutrals = Dict("Mars"=>[:Ar, :C, :CO, :CO2, # Argon and carbon speci
                                      :H2O2, :HDO2, :HOCO, :DOCO, 
                                      :N, :N2, :NO, :Nup2D, :N2O, :NO2,
                                      :O, :O1D, :O2, :O3, :OH, :OD,
-                                     :S, :SO, :SO2, :SO3, :H2SO4, :HDSO4] # Sulfur species
+                                     :S, :SO, :SO2, :SO3, :H2SO4, :HDSO4], # Sulfur species
+                            "Earth"=>[:H, :H2, 
+                                      :C, :C2, :C2H, :CH, :CH2, :CH3, :CH4, :e3CH2, :C2H2, :C2H3, :C2H4, :C3H3, 
+                                      :N2, :C2N2, :N4S, :N2D, :NH, :NH2, :NH3, :CN, :CHCN, :CH2CN, :HCN, :H2CN, :HNC, :HNO, 
+                                      :NO, :N2O, :CN2, :C2N, :CH2NH, :N2H2, :C3N, 
+                                      :O3P, :O1D, :CO, :HCO, :H2CO, :OH]
                            ); 
 
-const conv_ions = Dict("Mars"=>[:Arpl, :ArHpl, :ArDpl, 
-                                :Cpl, :CHpl, :COpl, :CO2pl, 
-                                :Dpl, :DCOpl, :DOCpl, :DCO2pl, 
-                                :Hpl,  :H2pl, :HDpl, :H3pl, :H2Dpl, 
-                                :H2Opl, :HDOpl, :H3Opl, :H2DOpl, 
-                                :HO2pl, :HCOpl, :HCO2pl, :HOCpl, :HNOpl,   
-                                :Npl, :NHpl, :N2pl, :N2Hpl, :N2Dpl, :NOpl, :N2Opl, :NO2pl,
-                                :Opl, :O2pl, :OHpl, :ODpl],
-                       "Venus"=>[:Arpl, :ArHpl, :ArDpl, 
-                                :Cpl, :CHpl, :COpl, :CO2pl, 
-                                :Dpl, :DCOpl, :DOCpl, :DCO2pl, 
-                                :Hpl,  :H2pl, :HDpl, :H3pl, :H2Dpl, 
-                                :H2Opl, :HDOpl, :H3Opl, :H2DOpl, 
-                                :HO2pl, :HCOpl, :HCO2pl, :HOCpl, :HNOpl,   
-                                :Npl, :NHpl, :N2pl, :N2Hpl, :N2Dpl, :NOpl, :N2Opl, :NO2pl,
-                                :Opl, :O2pl, :OHpl, :ODpl]
+ const conv_ions = Dict("Mars"=>[#:Arpl, :ArHpl, :ArDpl, 
+#                                 :Cpl, :CHpl, :COpl, :CO2pl, 
+#                                 :Dpl, :DCOpl, :DOCpl, :DCO2pl, 
+#                                 :Hpl,  :H2pl, :HDpl, :H3pl, :H2Dpl, 
+#                                 :H2Opl, :HDOpl, :H3Opl, :H2DOpl, 
+#                                 :HO2pl, :HCOpl, :HCO2pl, :HOCpl, :HNOpl,   
+#                                 :Npl, :NHpl, :N2pl, :N2Hpl, :N2Dpl, :NOpl, :N2Opl, :NO2pl,
+#                                 :Opl, :O2pl, :OHpl, :ODpl
+],
+                     "Venus"=>[#:Arpl, :ArHpl, :ArDpl, 
+                    #             :Cpl, :CHpl, :COpl, :CO2pl, 
+                    #             :Dpl, :DCOpl, :DOCpl, :DCO2pl, 
+                    #             :Hpl,  :H2pl, :HDpl, :H3pl, :H2Dpl, 
+                    #             :H2Opl, :HDOpl, :H3Opl, :H2DOpl, 
+                    #             :HO2pl, :HCOpl, :HCO2pl, :HOCpl, :HNOpl,   
+                    #             :Npl, :NHpl, :N2pl, :N2Hpl, :N2Dpl, :NOpl, :N2Opl, :NO2pl,
+                    #             :Opl, :O2pl, :OHpl, :ODpl
+                    ],
+                        "Earth"=>[]
                       );
 
 # More specific settings for controling the modeling of species
 # -------------------------------------------------------------------
-const ions_included = true
-const converge_which = "both"
+const ions_included = false
+const converge_which = "neutrals"
     # OPTIONS: "ions", "neutrals", "both"
 const dont_compute_chemistry = [:Ar]
 const dont_compute_transport = []
