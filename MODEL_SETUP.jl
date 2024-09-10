@@ -135,8 +135,8 @@ end
 # Chemistry and transport participants
 # -------------------------------------------------------------------
 if converge_which == "neutrals"
-    append!(no_chem_species, union(conv_ions[planet], N_neutrals)) # This is because the N chemistry is intimiately tied up with the ions.
-    append!(no_transport_species, union(conv_ions[planet], N_neutrals, short_lived_species))
+    append!(no_chem_species, union(conv_ions[planet])) # This is because the N chemistry is intimiately tied up with the ions.
+    append!(no_transport_species, union(conv_ions[planet], short_lived_species))
 elseif converge_which == "ions"
     append!(no_chem_species, setdiff(conv_neutrals[planet], N_neutrals))
     append!(no_transport_species, setdiff(conv_neutrals[planet], N_neutrals))
