@@ -122,9 +122,9 @@ const HDO_excess = 0.350 # excess HDO in ppm (divide by 1000 to get ppb)
 #                       on the previous run.
 const new_neutrals = [ 
 :C, :C2, :C2H, :C2H, :CH, :CH2, :CH3, :CH4, :e3CH2, :C2H2, :C2H3, :C2H4, :C3H3, 
-:N2, :C2N2, :N4S, :N2D, :NH, :NH2, :NH3, :CN, :CHCN, :CH2CN, :HCN, :H2CN, :HNC, :HNO, 
+:N2, :C2N2, :N2D, :NH, :NH2, :NH3, :CN, :CHCN, :CH2CN, :HCN, :H2CN, :HNC, :HNO, 
 :NO, :N2O, :CN2, :C2N, :CH2NH, :N2H2, :C3N, 
-:O3P, :O1D, :CO, :HCO, :H2CO, :OH];
+:O1D, :CO, :HCO, :H2CO, :OH];
 const new_ions = [];
 
 const conv_neutrals = Dict("Mars"=>[:Ar, :C, :CO, :CO2, # Argon and carbon species
