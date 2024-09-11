@@ -168,9 +168,9 @@ const conv_neutrals = Dict("Mars"=>[:Ar, :C, :CO, :CO2, # Argon and carbon speci
 const ions_included = true
 const converge_which = "both"
     # OPTIONS: "ions", "neutrals", "both"
-const dont_compute_chemistry = [:O2pl, :C, :C2, :C2H, :C2H4, :C2N, :C2N2, :C3H3, :C3N, :CH2, :CH2CN, :CH2NH, :CHCN, :CN2, :CO, :H2CO, :HCO, :HNO]
-const dont_compute_transport = [:O2pl, :C, :C2, :C2H, :C2H4, :C2N, :C2N2, :C3H3, :C3N, :CH2, :CH2CN, :CH2NH, :CHCN, :CN2, :CO, :H2CO, :HCO, :HNO]
-const dont_compute_either_chem_or_transport = [:O2pl, :C, :C2, :C2, :C2H4, :C2N, :C2N2, :C3H3, :C3N, :CH2, :CH2CN, :CH2NH, :CHCN, :CN2, :CO, :H2CO, :HCO, :HNO]  # Chemical species which should never update their densities, but may participate in chem+transport.
+const dont_compute_chemistry = []
+const dont_compute_transport = []
+const dont_compute_either_chem_or_transport = []  # Chemical species which should never update their densities, but may participate in chem+transport.
     # OPTIONS: Any species included in the model. 
 const assume_photochem_eq = false # whether to turn on photochemical equilibrium for short-lived species
 
