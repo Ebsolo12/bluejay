@@ -125,7 +125,7 @@ const new_neutrals = [
 :N2, :C2N2, :N2D, :NH, :NH2, :NH3, :CN, :CHCN, :CH2CN, :HCN, :H2CN, :HNC, :HNO, 
 :NO, :N2O, :CN2, :C2N, :CH2NH, :N2H2, :C3N, 
 :O1D, :CO, :HCO, :H2CO, :OH];
-const new_ions = [];
+const new_ions = [:CH4pl, :CH3pl];
 
 const conv_neutrals = Dict("Mars"=>[:Ar, :C, :CO, :CO2, # Argon and carbon species
                                     :H, :D, :H2, :HD, :H2O, :HDO,  # H and D species
@@ -181,7 +181,7 @@ const conv_neutrals = Dict("Mars"=>[:Ar, :C, :CO, :CO2, # Argon and carbon speci
 const ions_included = true
 const converge_which = "both"
     # OPTIONS: "ions", "neutrals", "both"
-const dont_compute_chemistry = [:Ar, :Arpl, :ArHpl, :ArDpl]
+const dont_compute_chemistry = [:Ar, :Arpl, :ArHpl, :ArDpl, :C2, :C2H]
 const dont_compute_transport = []
 const dont_compute_either_chem_or_transport = []  # Chemical species which should never update their densities, but may participate in chem+transport.
     # OPTIONS: Any species included in the model. 
