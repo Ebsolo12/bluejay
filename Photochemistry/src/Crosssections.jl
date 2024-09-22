@@ -247,8 +247,10 @@ function populate_xsect_dict(pd_dataf, xsecfolder; ion_xsects=true, globvars...)
                                 "SO3"=>[["SO2","O"]], #there may be more possible products than what I have listed, but JPL didn't give a recomended quantum yield
                                 "H2SO4"=>[["SO3","H2O"]], # same issue as SO3, JPL did not give a recomended quantum yield
                                 "HDSO4"=>[["SO3","HDO"]], # uses mass scaeling of H2SO4
-                                #CH4 
-                                "CH4"=> [["CH3pl", "H"], ["CH4pl"], ["CH3","H"],["CH2","H","H"]]) 
+                                #Hydrocarbons 
+                                "CH4"=> [["CH3pl", "H"], ["CH4pl"], ["CH3","H"],["CH2","H","H"]],
+                                "C2H2"=>[["C2H","H"], ["C2","H2"]],
+                                "C2H4"=>[["C2H2","H","H"], ["C2H2","H2"]]) 
     
         
 
