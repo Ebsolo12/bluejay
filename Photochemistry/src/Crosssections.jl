@@ -250,7 +250,8 @@ function populate_xsect_dict(pd_dataf, xsecfolder; ion_xsects=true, globvars...)
                                 #Hydrocarbons 
                                 "CH4"=> [["CH3pl", "H"], ["CH4pl"], ["CH3","H"],["CH2","H","H"]],
                                 "C2H2"=>[["C2H","H"], ["C2","H2"]],
-                                "C2H4"=>[["C2H2","H","H"], ["C2H2","H2"]]) 
+                                "C2H4"=>[["C2H2","H","H"], ["C2H2","H2"]],
+                                "C2"=> [["C2pl"]]) 
     
         
 
