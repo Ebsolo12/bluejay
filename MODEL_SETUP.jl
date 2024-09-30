@@ -37,8 +37,8 @@ const R_P = Dict( # Planetary radius in cm
                  "Earth"=>6378e5
                 )[planet] 
 const DH = Dict( # Atmospheric D/H ratio 
-                "Mars"=>5.5 * 1.6e-4, # Yung 1988
-                "Venus"=>240 * 1.6e-4,
+                "Mars"=>5.5 * SMOW, # Yung 1988
+                "Venus"=>240 * SMOW, # Fedorova 2008
                 "Earth"=>1.6e-4
                )[planet]
 const sol_in_sec = Dict(
@@ -89,7 +89,7 @@ const absorber = Dict([x=>Symbol(match(r"(?<=J).+(?=to)", string(x)).match) for 
 const D_H_analogues = Dict(:ArDpl=>:ArHpl, :Dpl=>:Hpl, :DCOpl=>:HCOpl, :HDpl=>:H2pl, :HD2pl=>:H3pl, :H2Dpl=>:H3pl, :N2Dpl=>:N2Hpl,
                            :DCO2pl=>:HCO2pl, :DOCpl=>:HOCpl, :H2DOpl=>:H3Opl, :HDOpl=>:H2Opl, :ODpl=>:OHpl)  
 const D_bearing_species = get_deuterated(all_species)
-const D_ions = get_deuterated(ion_species) #[s for s in ion_species if occursin('D', string(s))];
+const D_ions = get_deuterated(ion_species)
 const N_neutrals = [s for s in neutral_species if occursin('N', string(s))];
 
 
@@ -271,6 +271,17 @@ const Ti_arr = T_array_dict["ions"]
 const Te_arr = T_array_dict["electrons"]
 
 const Tplasma_arr = Ti_arr .+ Te_arr;
+# A comment on the plasma temperature: It's more rightly defined as (Te + Ti)/2, and comes into play in the diffusion
+# equation for ions. Per Schunk & Nagy 2009, equations 5.55 and 5.56, the ambipolar diffusion coefficient is 
+# Da = 2kT_p / (m_i * ν_in). This is the same as our formulation here (see Core.jl, Dcoef!()), which is 
+# Da = k(T_e + T_i) / (m_i * ν_in). The diffusion equation in our model includes a term like 1/T * dT/dz (see also
+# Schunk and Nagy 2009, equation 5.54, third term in the bracket). Note that the factor of 2 in the official definition of
+# the plasma temperature cancels out here. If we defined plasma temperature as the average of T_e and T_i, we would have an 
+# extra factor of 1/2 in the scale height (Schunk & Nagy 2009 equation 5.59) as calculated for plasma, unless we wrote a 
+# special version of scaleH() (see Core.jl) to handle the plasma temperature. To avoid reformulating our scale height 
+# function, we define the plasma temperature for the purposes of the model as simply T_e + T_i.
+# It may be warranted in the future to change this so that the definition matches with the literature appropriately.
+# --Eryn, 5 September 2024
 const Tprof_for_diffusion = Dict("neutral"=>Tn_arr, "ion"=>Tplasma_arr)
 const Tprof_for_Hs = Dict("neutral"=>Tn_arr, "ion"=>Ti_arr)
 
@@ -381,6 +392,12 @@ elseif planet=="Venus"
                                     :CO=>Dict("n"=>[4.5e-6*ntot_at_lowerbdy, NaN], "f"=>[NaN, 0.]),
                                     :O2=>Dict("n"=>[3e-3*ntot_at_lowerbdy, NaN], "f"=>[NaN, 0.]),
                                     :N2=>Dict("n"=>[0.032*ntot_at_lowerbdy, NaN]),
+
+                                    #Krasnopolsky, 2010a: this was 400ppb at 74km in altitude, and the actual number is likely lower (is either 4.0E-7, or 4.8E-7 depending on the calculation); and according to Zhang 2012 it is 3.66e-7
+                                    :HCl=>Dict("n"=>[3.66e-7 * ntot_at_lowerbdy, NaN]),
+
+                                    #Denis A. Belyaev 2012: this was 0.1 ppmv at 165–170 K to 0.5–1 ppmv at 190–192 K; It said 0.1ppm was related to the most common temperature reading so I went with that (this is either 1E-7 or 6.79E-8 depending on the calculation)
+                                    :SO2=>Dict("n"=>[1.0e-7 * ntot_at_lowerbdy, NaN]),
 
                                     # water mixing ratio is fixed at lower boundary
                                     :H2O=>Dict("n"=>[water_mixing_ratio*ntot_at_lowerbdy, NaN], "f"=>[NaN, 0.]),
