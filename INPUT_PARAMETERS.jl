@@ -122,10 +122,10 @@ const HDO_excess = 0.350 # excess HDO in ppm (divide by 1000 to get ppb)
 #                       on the previous run.
 const new_neutrals = [ 
 :C, :C2, :C2H, :C2H, :CH, :CH2, :CH3, :CH4, :e3CH2, :C2H2, :C2H3, :C2H4, :C3H3, 
-:N2, :C2N2, :N2D, :NH, :NH2, :NH3, :CN, :CHCN, :CH2CN, :HCN, :H2CN, :HNC, :HNO, 
+:N2, :C2N2, :N2D, :NH, :NH2, :NH2pl, :NH3, :CN, :CHCN, :CH2CN, :HCN, :H2CN, :HNC, :HNO, 
 :NO, :N2O, :CN2, :C2N, :CH2NH, :N2H2, :C3N, 
-:O1D, :CO, :HCO, :H2CO, :OH];
-const new_ions = [:CH4pl, :CH3pl];
+:O1D, :CO, :H2CO, :OH];
+const new_ions = [:CH4pl, :CH3pl, :C2pl];
 
 const conv_neutrals = Dict("Mars"=>[:Ar, :C, :CO, :CO2, # Argon and carbon species
                                     :H, :D, :H2, :HD, :H2O, :HDO,  # H and D species
@@ -143,12 +143,13 @@ const conv_neutrals = Dict("Mars"=>[:Ar, :C, :CO, :CO2, # Argon and carbon speci
                                      :S, :SO, :SO2, :SO3, :H2SO4, :HDSO4], # Sulfur species
                             "Earth"=>[:Ar, :C, :CO, :CO2, 
                             :Cl, :ClO, :ClCO, :HCl, :DCl,  # Chlorine species
-                            :H, :D, :H2, :HD, :H2O, :HDO,  # H and D species
-                            :HCO, :DCO, :HO2, :DO2,        
-                            :H2O2, :HDO2, :HOCO, :DOCO, 
+                            :H,  :H2, :H2O,  
+                            :HCO,          
+                            #:H2O2,  :HOCO,  
                             :N, :N2, :NO, :Nup2D, :N2O, :NO2,
-                            :O, :O1D, :O2, :O3, :OH, :OD,
-                            :S, :SO, :SO2, :SO3, :H2SO4, :HDSO4]
+                            :O, :O1D, :O2, :O3, :OH, 
+                            :S, :SO, :SO2, :SO3, :H2SO4, :HDSO4,
+                            :D, :HD, :HDO, :DCO, :DO2, :HDO2, :DOCO, :OD ]
                            ); 
 
  const conv_ions = Dict("Mars"=>[#:Arpl, :ArHpl, :ArDpl, 
@@ -167,13 +168,14 @@ const conv_neutrals = Dict("Mars"=>[:Ar, :C, :CO, :CO2, # Argon and carbon speci
                                  :HO2pl, :HCOpl, :HCO2pl, :HOCpl, :HNOpl,   
                                  :Npl, :NHpl, :N2pl, :N2Hpl, :N2Dpl, :NOpl, :N2Opl, :NO2pl,
                                  :Opl, :O2pl, :OHpl, :ODpl],
-                        "Earth"=>[:Cpl, :CHpl, :COpl, :CO2pl, 
-                        :Dpl, :DCOpl, :DOCpl, :DCO2pl, 
-                        :Hpl,  :H2pl, :HDpl, :H3pl, :H2Dpl, 
-                        :H2Opl, :HDOpl, :H3Opl, :H2DOpl, 
-                        :HO2pl, :HCOpl, :HCO2pl, :HOCpl, :HNOpl,   
-                        :Npl, :NHpl, :N2pl, :N2Hpl, :N2Dpl, :NOpl, :N2Opl, :NO2pl,
-                        :Opl, :O2pl, :OHpl, :ODpl]
+                        "Earth"=>[ 
+                        :Cpl, :CHpl, :COpl, :CO2pl, 
+                         
+                        :Hpl, 
+                          
+                               
+                        :Npl, :NHpl, :NH2pl, :N2pl, :NOpl, :N2Opl, :NO2pl,
+                        :Opl, :O2pl,  ]
                       );
 
 # More specific settings for controling the modeling of species
@@ -181,7 +183,8 @@ const conv_neutrals = Dict("Mars"=>[:Ar, :C, :CO, :CO2, # Argon and carbon speci
 const ions_included = true
 const converge_which = "both"
     # OPTIONS: "ions", "neutrals", "both"
-const dont_compute_chemistry = [:Ar, :Arpl, :ArHpl, :ArDpl]
+const dont_compute_chemistry = [:Ar, :Arpl, :ArHpl, :ArDpl, :HNO, :C2, :C2N, :C2N2, :C3H3, :C3N, :CH2CN, :CH2NH, :CHCN, :CN2, :C2H, :CHpl, :CH3pl, :CH4pl, :C2pl, :CO2pl, :Cl, :ClO, :ClCO, :DCl, :HCl, :S, :SO, :SO2, :SO3, :H2SO4, :HDSO4,
+:D, :HD, :HDO, :DCO, :DO2, :HDO2, :DOCO, :OD, :N2D, :N2H2, :N2Opl, :NH2pl,:NHpl, :NO2, :NO2pl, :NOpl, :Nup2D, :O3]
 const dont_compute_transport = []
 const dont_compute_either_chem_or_transport = []  # Chemical species which should never update their densities, but may participate in chem+transport.
     # OPTIONS: Any species included in the model. 
