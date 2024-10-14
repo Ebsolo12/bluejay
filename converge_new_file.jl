@@ -679,7 +679,7 @@ function get_rates_and_jacobian(n, p, t; globvars...)
 
     # Reconstruct the dictionary that holds densities
     updated_ncur_all = compile_ncur_all(n, n_short_updated, GV.n_inactive; GV.active_longlived, GV.active_shortlived, GV.inactive_species, GV.num_layers)
-
+    
     # Get the updated transport coefficients, taking into account short-lived species update
     tlower, tup, tdown, tupper = update_transport_coefficients(GV.transport_species, updated_ncur_all, D_arr, M; 
                                                                calc_nonthermal=nontherm, results_dir, sim_folder_name, 

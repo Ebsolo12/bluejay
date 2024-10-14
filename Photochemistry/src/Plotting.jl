@@ -113,7 +113,7 @@ function plot_atm(atmdict::Dict{Symbol, Vector{ftype_ncur}}, savepath::String, a
     # This dictionary was created by hand. Species may be missing. If so, an error will automatically be thrown by the code
     species_groups = Dict( # PRIMARY NEUTRALS + IONS
                             1=>[:CO2,:CO2pl,
-                                :CO,:COpl,
+                                :H2CO, :CO,:COpl,
                                 :N2,:Nup2D,:N2pl,
                                 :Ar,:Arpl,
                                 :ArHpl,:ArDpl,
@@ -134,13 +134,13 @@ function plot_atm(atmdict::Dict{Symbol, Vector{ftype_ncur}}, savepath::String, a
                                 :HO2,:HO2pl,:DO2,
                                 :OH,:OHpl,:OD,:ODpl],
                             # NITROGEN NEUTRALS + IONS, RARE C MOLECULES, CHLORINE, SULFUR
-                            3=>[:C,:Cpl,:CH,:CHpl,
-                                :CN,:CNpl,:HCN,:HCNpl,:HCNHpl,
+                            3=>[:C, :CH2, :CH3, :CH3pl, :CH4, :CH4pl, :C2, :C2pl, :C2H, :C2H2, :C2H3, :C2H4, :C3H3, :Cpl,:CH,:CHpl, :e3CH2, 
+                                :CN, :CN2, :C2N, :C2N2, :C3N, :CNpl,:HCN, :HNC, :HCNpl,:HCNHpl, :CHCN, :CH2CN, :H2CN, 
                                 :HNO,:HNOpl,:HN2Opl,
-                                :N,:Npl,:N2O,:N2Opl,
-                                :NH,:NHpl,:NH2,:NH2pl,:NH3pl,
+                                :N,:Npl,:N2O,:N2Opl, :N2H2,
+                                :CH2NH, :NH,:NHpl,:NH2,:NH2pl,:NH3pl, :NH3, 
                                 :NO,:NOpl,:NO2,:NO2pl,
-                                :N2Hpl,:N2Dpl,
+                                :N2Hpl,:N2Dpl, :N2D,
                                 :HCl, :Cl, :ClO, :ClCO, :DCl, :Cl2,
                                 :S, :SO, :SO2, :SO3, :H2SO4, :HDSO4]
                         );
