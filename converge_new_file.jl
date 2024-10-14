@@ -1462,10 +1462,13 @@ solarflux = readdlm(code_dir*solarfile,'\t', Float64, comments=true, comment_cha
 solarflux[:,2] = solarflux[:,2] * cosd(SZA)  # Adjust the flux according to specified SZA
 
 # lambdas = Float64[]
-# for j in Jratelist, ialt in 1:length(alt)
-#     global lambdas = union(lambdas, crosssection[j][ialt][:,1])
-#     println(lambdas)
-#     println()
+# for j in Jratelist
+#     println("New wavelengths assoc. with Jrate $(j): $(setdiff(lambdas, crosssection[j][1][:,1]))")
+#     for ialt in 1:length(alt)
+#         global lambdas = union(lambdas, crosssection[j][ialt][:,1])
+#     end
+    # println(lambdas)
+    # println()
 # end
 
 # if !(setdiff(solarflux[:,1],lambdas)==[])
@@ -1473,8 +1476,10 @@ solarflux[:,2] = solarflux[:,2] * cosd(SZA)  # Adjust the flux according to spec
 # end
 
 # pad all cross-sections to solar
-for j in Jratelist, ialt in 1:length(alt)
-    crosssection[j][ialt] = padtosolar(solarflux, crosssection[j][ialt])
+for j in Jratelist
+    for ialt in 1:length(alt)
+        crosssection[j][ialt] = padtosolar(solarflux, crosssection[j][ialt])
+    end
 end
 
 # this is the unitialized array for storing values
