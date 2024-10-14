@@ -48,7 +48,7 @@ const speciescolor = Dict( # PRIMARY NEUTRALS + IONS
 
 
                     # NITROGEN NEUTRALS + IONS
-                    :C=>"#d9c382",:Cpl=>"#d9c382", :C2=>"d9c382",
+                    :C=>"#d9c382",:Cpl=>"#d9c382", :C2=>"#d9c382",
                     :CH=>"#cea3ce",:CHpl=>"#cea3ce", :C2H=>"#cea3ce", :C2H2=>"#cea3ce", :C2H3=>"#cea3ce", :C2H4=>"#cea3ce", :C3H3=>"#cea3ce", :CH2=>"#cea3ce", :e3CH2=>"#cea3ce", :CH3=>"#cea3ce", :CH4=>"#cea3ce",
                     :CN=>"#6d5000", :CN2=>"#6d5000",:CNpl=>"#6d5000", :C2N=>"#6d5000", :C2N2=>"#6d5000",
                     :HCN=>"#519169",:HCNpl=>"#519169", :HNC=>"#519169", :H2CN=>"#519169", :CHCN=>"#519169", :CH2CN=>"#519169", :CH2NH=>"#519169",

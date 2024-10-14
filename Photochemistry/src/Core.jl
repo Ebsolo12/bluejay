@@ -2168,7 +2168,7 @@ function update_transport_coefficients(species_list, atmdict::Dict{Symbol, Vecto
                :ion_species, :M_P, :molmass, :neutral_species, :non_bdy_layers, :num_layers, :n_all_layers, :n_alt_index, 
                :polarizability, :q, :R_P, :Tn, :Ti, :Te, :Tp, :Tprof_for_diffusion, :transport_species, :use_ambipolar, :use_molec_diff, :zmax]
     check_requirements(keys(GV), required)
-    
+
     # Update the diffusion coefficients and scale heights
     K_eddy_arr, H0_dict, Dcoef_dict = update_diffusion_and_scaleH(species_list, atmdict, D_coefs; globvars...)
 

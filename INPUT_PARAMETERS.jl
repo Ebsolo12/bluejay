@@ -205,7 +205,7 @@ const abs_tol = 1e-12
 # Helpful options for adding new things to the model 
 # =======================================================================================================
 const do_chem = true   # Turning this or next one of will toggle chemistry or transport.
-const do_trans = true  # Often useful for troubleshooting or converging new atmospheres.
+const do_trans = false  # Often useful for troubleshooting or converging new atmospheres.
 const adding_new_species = true
 const make_new_alt_grid = false  # Set to true if extending the altitude grid. TODO: Need to re-write that code.
 const use_nonzero_initial_profiles = false 
