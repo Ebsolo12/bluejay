@@ -202,7 +202,7 @@ function evolve_atmosphere(atm_init::Dict{Symbol, Array{ftype_ncur, 1}}, log_t_s
 
     return sol, sim_time
 end
-
+println(nstart)
 function chemJmat(n_active_longlived, n_active_shortlived, n_inactive, Jrates, tup, tdown, tlower, tupper, M, E;
                   check_eigen=false, globvars...)
     #=

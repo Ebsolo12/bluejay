@@ -122,10 +122,10 @@ const HDO_excess = 0.350 # excess HDO in ppm (divide by 1000 to get ppb)
 #                       on the previous run.
 const new_neutrals = [ 
 :C, :C2, :C2H, :C2H, :CH, :CH2, :CH3, :CH4, :e3CH2, :C2H2, :C2H3, :C2H4, :C3H3, 
-:N2, :C2N2, :N2D, :NH, :NH2, :NH2pl, :NH3, :CN, :CHCN, :CH2CN, :HCN, :H2CN, :HNC, :HNO, 
+:N2, :C2N2, :N2D, :NH, :NH2, :NH3, :CN, :CHCN, :CH2CN, :HCN, :H2CN, :HNC, :HNO, 
 :NO, :N2O, :CN2, :C2N, :CH2NH, :N2H2, :C3N, 
 :O1D, :CO, :H2CO, :OH];
-const new_ions = [:CH4pl, :CH3pl, :C2pl];
+const new_ions = [:CH4pl, :CH3pl, :C2pl, :NH2pl];
 
 const conv_neutrals = Dict("Mars"=>[:Ar, :C, :CO, :CO2, # Argon and carbon species
                                     :H, :D, :H2, :HD, :H2O, :HDO,  # H and D species
@@ -205,7 +205,7 @@ const abs_tol = 1e-12
 # Helpful options for adding new things to the model 
 # =======================================================================================================
 const do_chem = true   # Turning this or next one of will toggle chemistry or transport.
-const do_trans = false  # Often useful for troubleshooting or converging new atmospheres.
+const do_trans = true  # Often useful for troubleshooting or converging new atmospheres.
 const adding_new_species = true
 const make_new_alt_grid = false  # Set to true if extending the altitude grid. TODO: Need to re-write that code.
 const use_nonzero_initial_profiles = false 

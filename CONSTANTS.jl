@@ -50,7 +50,23 @@ const polarizability = Dict(# Values available from experiment
                             :DCO=>2.505e-24, :DO2=>1.858e-24, :DOCO=>3.224e-24, :HDO2=>2.143e-24, :O1D=>0.802e-24, 
 
                             # Assumed same as non-excited version
-                            :Nup2D=>1.710e-24, 
+                            :Nup2D=>1.710e-24,
+
+                            #Eb Species
+                            #Hydrocarbons
+                            :C2=>5.763e-24, :C2H=>3.33e-24, :C2H2=>3.487e-24, :C2H3=>2.948E-24, :C2H4=>4.188E-24, :C3H3=>4.310E-24, 
+                            :CH=>1.428E-24, :CH2=>1.293E-24, :e3CH2=>1.212E-24, :CH3=>1.561E-24, :CH3O=>2.653E-24, :CH4=>2.448E-24,
+                            
+                            :C2N=>5.015E-24, :C2N2=>5.015E-24, :C3N=>5.015E-24, :CN2=>2.751E-24, :HNC=>2.034E-24, :H2CN=>2.243E-24,
+
+                            :NH3=>2.103E-24, :N2H2=>1.949E-24, :N2D=>1.710e-24, :CHCN=>3.308E-24, :CH2CN=>3.308E-24, 
+
+                            :CH2NH=>2.555E-24,
+                            :H2CO=>2.770E-24
+
+                            #Couldnt find values for C2N, C3N, CH2CN
+                            #Treating CN2 as cyanoimogen (NCN)
+                            #H2CN is the Dihydrogen Cyanide radical
 
                             # IONS! Because we should include sum over ions per Garcia Munoz 2007.
                             #:H2pl=>4.69e-25, 
