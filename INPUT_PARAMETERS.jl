@@ -14,13 +14,13 @@
 
 # Set the planet 
 # =======================================================================================================
-const planet = "Venus"
+const planet = "Earth"
     # OPTIONS: "Mars", "Venus"
 
 # Input and output files, directory
 # =======================================================================================================
 const results_dir = code_dir*"../Results_$(planet)/"
-const initial_atm_file = "$(planet)-Inputs/made DpHCltoHDpCl mass scale.h5"  # File to use to initialize the atmosphere.
+const initial_atm_file = "$(planet)-Inputs/" * "INITIAL_GUESS.h5" # File to use to initialize the atmosphere. 
     # OPTIONS: 
     # INITIAL_GUESS_MARS.h5 --> Basic Mars starting file.
     # INITIAL_GUESS_MARS_bxz4YnHk.h5 --> A Mars atmosphere that includes N2O, NO2, and their ions;
@@ -69,7 +69,7 @@ const temp_scenario = "mean"  # Temperature selection for the seasonal model run
 # Solar case
 # -------------------------------------------------------------------
 const SZA = 60  # Puts the model at dayside mean. Enter in degrees please.
-const solar_scenario = "solarmean" 
+const solar_scenario = "solarmax" 
     # Solar scenario definition. You can choose from different Mars-sun distances or parts of the solar cycle.
     # ORBITAL DISTANCE OPTIONS: "perihelion" #  "meansundist" # "aphelion"; these are defined at solar mean. 
     #     NOTE: these options are only available for Mars at present.
@@ -101,10 +101,6 @@ const HDO_excess = 0.350 # excess HDO in ppm (divide by 1000 to get ppb)
 # Control which species (atoms, molecules) are modeled 
 # =======================================================================================================
 
-const ions_included = true
-const converge_which = "both"
-    # OPTIONS: "ions", "neutrals", "both"
-
 # Species lists
 # -------------------------------------------------------------------
 # Convention: Alphabetized, except D-bearing species should be mixed in after their H-bearing isotopologue. 
@@ -124,8 +120,8 @@ const converge_which = "both"
 #                       They should already have a density vector in your initial guess file. 
 #                       Typically you won't need to change these at each run, UNLESS you added new species 
 #                       on the previous run.
-const new_neutrals = [:C2, :C2H, :CH, :CH2, :CH3, :CH4, :e3CH2, :C2H2, :C2H3, :C2H4, :C3H3, :C2N2, :NH, :NH2, :NH3, :CN, :CHCN, :CH2CN, :HCN, :H2CN, :HNC, :HNO, :CN2, :C2N, :CH2NH, :N2H2, :C3N, :H2CO, :CH3O, :HNCO, :NCO]; # added Airapetian network neutrals
-const new_ions = [];
+const const new_neutrals = [:C2, :C2H, :CH, :CH2, :CH3, :CH4, :e3CH2, :C2H2, :C2H3, :C2H4, :C3H3, :C2N2, :NH, :NH2, :NH3, :CN, :CHCN, :CH2CN, :HCN, :H2CN, :HNC, :HNO, :CN2, :C2N, :CH2NH, :N2H2, :C3N, :H2CO, :CH3O, :HNCO, :NCO];
+const new_ions = [:CH4pl, :CH3pl, :C2pl, :NH2pl];
 
 const conv_neutrals = Dict("Mars"=>[:Ar, :C, :CO, :CO2, # Argon and carbon species
                                     :H, :D, :H2, :HD, :H2O, :HDO,  # H and D species
@@ -141,31 +137,41 @@ const conv_neutrals = Dict("Mars"=>[:Ar, :C, :CO, :CO2, # Argon and carbon speci
                                      :N, :N2, :NO, :Nup2D, :N2O, :NO2,
                                      :O, :O1D, :O2, :O3, :OH, :OD,
                                      :S, :SO, :SO2, :SO3, :H2SO4, :HDSO4], # Sulfur species
-                                     "Earth"=>[:H, :H2, :C, :N, :N2,:Nup2D, :NO, :N2O, :O, :CO, :HCO, :CO2, :H2O]
+                            "Earth"=>[:H, :H2, :C, :N, :N2,:Nup2D, :NO, :N2O, :O, :CO, :HCO, :CO2, :H2O]
                            ); 
 
-const conv_ions = Dict("Mars"=>[:Arpl, :ArHpl, :ArDpl, 
-                                :Cpl, :CHpl, :COpl, :CO2pl, 
-                                :Dpl, :DCOpl, :DOCpl, :DCO2pl, 
-                                :Hpl,  :H2pl, :HDpl, :H3pl, :H2Dpl, 
-                                :H2Opl, :HDOpl, :H3Opl, :H2DOpl, 
-                                :HO2pl, :HCOpl, :HCO2pl, :HOCpl, :HNOpl,   
-                                :Npl, :NHpl, :N2pl, :N2Hpl, :N2Dpl, :NOpl, :N2Opl, :NO2pl,
-                                :Opl, :O2pl, :OHpl, :ODpl],
-                       "Venus"=>[:Arpl, :ArHpl, :ArDpl, 
-                                :Cpl, :CHpl, :COpl, :CO2pl, 
-                                :Dpl, :DCOpl, :DOCpl, :DCO2pl, 
-                                :Hpl,  :H2pl, :HDpl, :H3pl, :H2Dpl, 
-                                :H2Opl, :HDOpl, :H3Opl, :H2DOpl, 
-                                :HO2pl, :HCOpl, :HCO2pl, :HOCpl, :HNOpl,   
-                                :Npl, :NHpl, :N2pl, :N2Hpl, :N2Dpl, :NOpl, :N2Opl, :NO2pl,
-                                :Opl, :O2pl, :OHpl, :ODpl],
-                        "Earth"=>[]
+ const conv_ions = Dict("Mars"=>[#:Arpl, :ArHpl, :ArDpl, 
+                                 :Cpl, :CHpl, :COpl, :CO2pl, 
+                                 :Dpl, :DCOpl, :DOCpl, :DCO2pl, 
+                                 :Hpl,  :H2pl, :HDpl, :H3pl, :H2Dpl, 
+                                 :H2Opl, :HDOpl, :H3Opl, :H2DOpl, 
+                                 :HO2pl, :HCOpl, :HCO2pl, :HOCpl, :HNOpl,   
+                                 :Npl, :NHpl, :N2pl, :N2Hpl, :N2Dpl, :NOpl, :N2Opl, :NO2pl,
+                                 :Opl, :O2pl, :OHpl, :ODpl],
+                     "Venus"=>[#:Arpl, :ArHpl, :ArDpl, 
+                                 :Cpl, :CHpl, :COpl, :CO2pl, 
+                                 :Dpl, :DCOpl, :DOCpl, :DCO2pl, 
+                                 :Hpl,  :H2pl, :HDpl, :H3pl, :H2Dpl, 
+                                 :H2Opl, :HDOpl, :H3Opl, :H2DOpl, 
+                                 :HO2pl, :HCOpl, :HCO2pl, :HOCpl, :HNOpl,   
+                                 :Npl, :NHpl, :N2pl, :N2Hpl, :N2Dpl, :NOpl, :N2Opl, :NO2pl,
+                                 :Opl, :O2pl, :OHpl, :ODpl],
+                        "Earth"=>[:Arpl, :ArHpl, :ArDpl, 
+                        :Cpl, :CHpl, :COpl, :CO2pl, 
+                        :Dpl, :DCOpl, :DOCpl, :DCO2pl, 
+                        :Hpl,  :H2pl, :HDpl, :H3pl, :H2Dpl, 
+                        :H2Opl, :HDOpl, :H3Opl, :H2DOpl, 
+                        :HO2pl, :HCOpl, :HCO2pl, :HOCpl, :HNOpl,   
+                        :Npl, :NHpl, :N2pl, :N2Hpl, :N2Dpl, :NOpl, :N2Opl, :NO2pl,
+                        :Opl, :O2pl, :OHpl, :ODpl]
                       );
 
 # More specific settings for controling the modeling of species
 # -------------------------------------------------------------------
-const dont_compute_chemistry = [:Ar]
+const ions_included = true
+const converge_which = "both"
+    # OPTIONS: "ions", "neutrals", "both"
+const dont_compute_chemistry = []
 const dont_compute_transport = []
 const dont_compute_either_chem_or_transport = []  # Chemical species which should never update their densities, but may participate in chem+transport.
     # OPTIONS: Any species included in the model. 
@@ -187,9 +193,9 @@ const abs_tol = 1e-12
 # =======================================================================================================
 const do_chem = true   # Turning this or next one of will toggle chemistry or transport.
 const do_trans = true  # Often useful for troubleshooting or converging new atmospheres.
-const adding_new_species = false
+const adding_new_species = true
 const make_new_alt_grid = false  # Set to true if extending the altitude grid. TODO: Need to re-write that code.
-const use_nonzero_initial_profiles = true
+const use_nonzero_initial_profiles = false 
     # OPTIONS: 
     # true -- uses initial guess densities for species based on previous model output.
     # false -- sets species to zero density and lets the chemistry and transport build them up.
