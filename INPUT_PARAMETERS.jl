@@ -124,7 +124,7 @@ const converge_which = "both"
 #                       They should already have a density vector in your initial guess file. 
 #                       Typically you won't need to change these at each run, UNLESS you added new species 
 #                       on the previous run.
-const new_neutrals = [];
+const new_neutrals = [:C2, :C2H, :CH, :CH2, :CH3, :CH4, :e3CH2, :C2H2, :C2H3, :C2H4, :C3H3, :C2N2, :NH, :NH2, :NH3, :CN, :CHCN, :CH2CN, :HCN, :H2CN, :HNC, :HNO, :CN2, :C2N, :CH2NH, :N2H2, :C3N, :H2CO, :CH3O, :HNCO, :NCO]; # added Airapetian network neutrals
 const new_ions = [];
 
 const conv_neutrals = Dict("Mars"=>[:Ar, :C, :CO, :CO2, # Argon and carbon species
@@ -140,7 +140,8 @@ const conv_neutrals = Dict("Mars"=>[:Ar, :C, :CO, :CO2, # Argon and carbon speci
                                      :H2O2, :HDO2, :HOCO, :DOCO, 
                                      :N, :N2, :NO, :Nup2D, :N2O, :NO2,
                                      :O, :O1D, :O2, :O3, :OH, :OD,
-                                     :S, :SO, :SO2, :SO3, :H2SO4, :HDSO4] # Sulfur species
+                                     :S, :SO, :SO2, :SO3, :H2SO4, :HDSO4], # Sulfur species
+                                     "Earth"=>[:H, :H2, :C, :N, :N2,:Nup2D, :NO, :N2O, :O, :CO, :HCO, :CO2, :H2O]
                            ); 
 
 const conv_ions = Dict("Mars"=>[:Arpl, :ArHpl, :ArDpl, 
@@ -158,7 +159,8 @@ const conv_ions = Dict("Mars"=>[:Arpl, :ArHpl, :ArDpl,
                                 :H2Opl, :HDOpl, :H3Opl, :H2DOpl, 
                                 :HO2pl, :HCOpl, :HCO2pl, :HOCpl, :HNOpl,   
                                 :Npl, :NHpl, :N2pl, :N2Hpl, :N2Dpl, :NOpl, :N2Opl, :NO2pl,
-                                :Opl, :O2pl, :OHpl, :ODpl]
+                                :Opl, :O2pl, :OHpl, :ODpl],
+                        "Earth"=>[]
                       );
 
 # More specific settings for controling the modeling of species
