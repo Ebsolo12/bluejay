@@ -87,7 +87,9 @@ const molmass = Dict(:H=>1, :Hpl=>1,
                      :HOCO=>45, :HCO2pl=>45, :HN2Opl=>45,  
                      :DOCO=>46, :DCO2pl=>46, :NO2=>46, :NO2pl=>46,
                      :O3=>48, :HCl=>36, :Cl=>35, :ClO=>51, :ClCO=>63, :Cl2=>71, :DCl=>37,
-                     :S=>32, :SO=>48, :SO2=>64, :SO3=>80, :H2SO4=>98, :HDSO4=>99
+                     :S=>32, :SO=>48, :SO2=>64, :SO3=>80, :H2SO4=>98, :HDSO4=>99,
+                     # Eb new neutrals
+                     :C2=>24, :C2H=>25, :CH=>13, :CH2=>14, :CH3=>15, :CH4=>16, :e3CH2=>14, :C2H2=>26, :C2H3=>27, :C2H4=>28, :C3H3=>39, :C2N2=>52, :NH3=17, :CHCN=>39, :CH2CN=>40, :H2CN=>28, :HNC=>27, :CN2=>40, :C2N=>38, :CH2NH=>29, :N2H2=>30, :C3N=>50, :H2CO=>30, :CH3O=>31, :HNCO=>43, :NCO=>42
                      )
 
 const collision_xsect = Dict(:H=>4e-15, # Zhang 2009

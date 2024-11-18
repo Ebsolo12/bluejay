@@ -28,23 +28,28 @@ end
 # cannot load something based on a variable defined in the enclosing scope. 
 const M_P = Dict( # Planetary mass in g 
                  "Mars"=>0.1075*5.972e27, 
-                 "Venus"=>4.867e27
+                 "Venus"=>4.867e27,
+                 "Earth"=>5.97e27
                 )[planet]
 const R_P = Dict( # Planetary radius in cm
                  "Mars"=>3396e5, 
-                 "Venus"=>6050e5
+                 "Venus"=>6050e5,
+                 "Earth"=>6378e5
                 )[planet] 
 const DH = Dict( # Atmospheric D/H ratio 
                 "Mars"=>5.5 * SMOW, # Yung 1988
-                "Venus"=>240 * SMOW, # Fedorova 2008
+                "Venus"=>240 * SMOW,
+                "Earth"=>1.6e-4 # Fedorova 2008
                )[planet]
 const sol_in_sec = Dict(
                         "Mars"=>88775.2438,   # One Mars sol in seconds
-                        "Venus"=>2.09968e7
+                        "Venus"=>2.09968e7,
+                        "Earth"=>86400
                        )[planet]
 const season_in_sec = Dict(
                            "Mars"=>1.4838759e7,
-                           "Venus"=>4.8535373e6
+                           "Venus"=>4.8535373e6,
+                           "Earth"=>7.884e6
                           )[planet]
 const g = bigG * M_P / (R_P^2);
 const SA = 4*pi*(R_P)^2 # cm^2
@@ -196,7 +201,7 @@ const e_profile_type = ions_included==true ? "quasineutral" : "none"
 
 #                                       Altitude grid                  
 # =======================================================================================================
-const zmin = Dict("Venus"=>90e5, "Mars"=>0.)[planet]
+const zmin = Dict("Venus"=>90e5, "Mars"=>0., "Earth"=>90e5)[planet]
 const dz = 2e5  # Discretized layer thickness
 const zmax = 250e5  # Top altitude (cm)
 const alt = convert(Array, (zmin:dz:zmax)) # These are the layer centers.
@@ -215,22 +220,26 @@ const hygropause_alt = 40e5  # Location of the hygropause
 const Texo_opts = Dict("Mars"=>Dict("min-P2"=>190., "mean-P2"=>210., "max-P2"=>280.,   # These are based on solar min, mean, max.
                                     "min"=>175., "mean"=>225., "max"=>275.,   # These are based on solar min, mean, max.
                                     "meansundist"=>225., "aphelion"=>225., "perihelion"=>225.),
-                       "Venus"=>Dict("min"=>260., "mean"=>290., "max"=>320.))
+                       "Venus"=>Dict("min"=>260., "mean"=>290., "max"=>320.),
+                       "Earth"=>Dict("min"=>260., "mean"=>290., "max"=>320.))
 
 const Texo_inclusive_opts = Dict("inclusive-ap"=>175., 
                                  "inclusive-mean"=>225., 
                                  "inclusive-peri"=>275.)
 
-const Tsurf = Dict("Mars"=>230., "Venus"=>735.)
-const Tmeso = Dict("Mars"=>130., "Venus"=>170.)
+const Tsurf = Dict("Mars"=>230., "Venus"=>735. , "Earth"=>288.)
+const Tmeso = Dict("Mars"=>130., "Venus"=>170. , "Earth"=>153.)
 
 # Create the temperature profile control array
 const controltemps = [Tsurf[planet], Tmeso[planet], Texo_opts[planet]["mean"]]
-if planet=="Venus"
+if planet == "Venus"
     const meantemps = [Tsurf[planet], Tmeso[planet], Texo_opts[planet]["min"]] # Used for saturation vapor pressure. DON'T CHANGE!
-elseif planet=="Mars"
+elseif planet == "Mars"
     const meantemps = [Tsurf[planet], Tmeso[planet], Texo_opts[planet]["mean"]] # Used for saturation vapor pressure. DON'T CHANGE!
+elseif planet == "Earth"
+    const meantemps = [Tsurf[planet], Tmeso[planet], Texo_opts[planet]["min"]] # Used for saturation vapor pressure. DON'T CHANGE!
 end
+
 
 
 # Modify the settings if doing a special isothermal atmosphere.
@@ -253,6 +262,9 @@ if planet=="Mars"
 elseif planet=="Venus"
     const T_array_dict = T_Venus(controltemps[1], controltemps[2], controltemps[3], "Venus-Inputs/FoxandSung2001_temps_mike.txt"; alt);
     const Tn_meanSVP = T_Venus(meantemps..., "Venus-Inputs/FoxandSung2001_temps_mike.txt"; alt)["neutrals"]; # Needed for boundary conditions.
+elseif planet=="Earth"
+    const T_array_dict = T_Mars(controltemps[1], controltemps[2], controltemps[3]; alt)
+    const Tn_meanSVP = T_Mars(meantemps...; alt)["neutrals"]; # Needed for boundary conditions.
 end
 
 const Tn_arr = T_array_dict["neutrals"]
@@ -303,6 +315,8 @@ elseif planet=="Venus"
         const hdo_vmr_low = 2*DH*water_mixing_ratio
         const hdo_vmr_high = nothing
     end
+elseif planet=="Earth"
+    const water_mixing_ratio = Dict("standard"=>1e-6)[water_case]
 end
 
 # Whether to install a whole new water profile or just use the initial guess with modifications (for seasonal model)
@@ -310,6 +324,8 @@ if planet=="Venus"
     const reinitialize_water_profile = venus_special_water==true ? true : false
 elseif planet=="Mars"
     const reinitialize_water_profile = seasonal_cycle==true ? false : true # should be off if trying to run simulations for seasons
+    elseif planet=="Earth"
+    const reinitialize_water_profile = false 
 end
 
 const update_water_profile = seasonal_cycle==true ? true : false # this is for modifying the profile during cycling, MAY be fixed?
@@ -349,91 +365,64 @@ const Hs_dict = Dict{Symbol, Vector{Float64}}([sp=>scaleH(alt, sp, Tprof_for_Hs[
 # "n": density boundary condition; "f": flux bc; "v": velocity bc; 
 # "see boundaryconditions()" -- nonthermal escape depends on the dynamic density of the
 # atmosphere, so it can't be imposed as a constant here and is calculated on the fly.
-if planet=="Mars"
-    const speciesbclist=Dict(:CO2=>Dict("n"=>[2.1e17, NaN], "f"=>[NaN, 0.]),
-                        :Ar=>Dict("n"=>[2.0e-2*2.1e17, NaN], "f"=>[NaN, 0.]),
-                        :N2=>Dict("n"=>[1.9e-2*2.1e17, NaN], "f"=>[NaN, 0.]),
-                        #:C=>Dict("f"=>[NaN, 4e5]), # NEW: Based on Lo 2021
-                        :H2O=>Dict("n"=>[H2Osat[1], NaN], "f"=>[NaN, 0.]), # bc doesnt matter if H2O fixed
-                        :HDO=>Dict("n"=>[HDOsat[1], NaN], "f"=>[NaN, 0.]),
-                        :O=> Dict("f"=>[0., 1.2e8]),
-                        :H2=>Dict("f"=>[0., NaN], "v"=>[NaN, effusion_velocity(Tn_arr[end], 2.0; M_P, R_P, zmax)], "ntf"=>[NaN, "see boundaryconditions()"]),  # velocities are in cm/s
-                        :HD=>Dict("f"=>[0., NaN], "v"=>[NaN, effusion_velocity(Tn_arr[end], 3.0; M_P, R_P, zmax)], "ntf"=>[NaN, "see boundaryconditions()"]),
-                        :H=> Dict("f"=>[0., NaN], "v"=>[NaN, effusion_velocity(Tn_arr[end], 1.0; M_P, R_P, zmax)], "ntf"=>[NaN, "see boundaryconditions()"]),
-                        :D=> Dict("f"=>[0., NaN], "v"=>[NaN, effusion_velocity(Tn_arr[end], 2.0; M_P, R_P, zmax)], "ntf"=>[NaN, "see boundaryconditions()"]),
-                       );
-elseif planet=="Venus"
-    const ntot_at_lowerbdy = 9.5e15 # at 90 km
+if planet == "Mars"
+    const speciesbclist = Dict(
+        :CO2 => Dict("n" => [2.1e17, NaN], "f" => [NaN, 0.]),
+        :Ar  => Dict("n" => [2.0e-2 * 2.1e17, NaN], "f" => [NaN, 0.]),
+        :N2  => Dict("n" => [1.9e-2 * 2.1e17, NaN], "f" => [NaN, 0.]),
+        :H2O => Dict("n" => [H2Osat[1], NaN], "f" => [NaN, 0.]),  # bc doesn't matter if H2O fixed
+        :HDO => Dict("n" => [HDOsat[1], NaN], "f" => [NaN, 0.]),
+        :O   => Dict("f" => [0., 1.2e8]),
+        :H2  => Dict("f" => [0., NaN], "v" => [NaN, effusion_velocity(Tn_arr[end], 2.0; M_P, R_P, zmax)], "ntf" => [NaN, "see boundaryconditions()"]),
+        :HD  => Dict("f" => [0., NaN], "v" => [NaN, effusion_velocity(Tn_arr[end], 3.0; M_P, R_P, zmax)], "ntf" => [NaN, "see boundaryconditions()"]),
+        :H   => Dict("f" => [0., NaN], "v" => [NaN, effusion_velocity(Tn_arr[end], 1.0; M_P, R_P, zmax)], "ntf" => [NaN, "see boundaryconditions()"]),
+        :D   => Dict("f" => [0., NaN], "v" => [NaN, effusion_velocity(Tn_arr[end], 2.0; M_P, R_P, zmax)], "ntf" => [NaN, "see boundaryconditions()"]),
+    )
+    
+elseif planet == "Earth"
+    const speciesbclist = Dict(
+        :N2  => Dict("n" => [7.8e17, NaN], "f" => [NaN, 0.]),
+        :O2  => Dict("n" => [2.1e17, NaN], "f" => [NaN, 0.]),
+        :Ar  => Dict("n" => [9.3e-3 * 7.8e17, NaN], "f" => [NaN, 0.]),
+        :CO2 => Dict("n" => [4.0e-4 * 7.8e17, NaN], "f" => [NaN, 0.]),
+        :H2O => Dict("n" => [H2Osat[1], NaN], "f" => [NaN, 0.]),
+        :O   => Dict("f" => [0., 1.0e7]),
+        :H2  => Dict("f" => [0., NaN], "v" => [NaN, effusion_velocity(Tn_arr[end], 2.0; M_P, R_P, zmax)], "ntf" => [NaN, "see boundaryconditions()"]),
+        :H   => Dict("f" => [0., NaN], "v" => [NaN, effusion_velocity(Tn_arr[end], 1.0; M_P, R_P, zmax)], "ntf" => [NaN, "see boundaryconditions()"]),
+        :HD  => Dict("f" => [0., NaN], "v" => [NaN, effusion_velocity(Tn_arr[end], 3.0; M_P, R_P, zmax)], "ntf" => [NaN, "see boundaryconditions()"]),
+    )
+    
+elseif planet == "Venus"
+    const ntot_at_lowerbdy = 9.5e15  # at 90 km
 
     H2O_lowerbdy = h2o_vmr_low * ntot_at_lowerbdy
     HDO_lowerbdy = hdo_vmr_low * ntot_at_lowerbdy
+
+    const KoverH_lowerbdy = Keddy([zmin], [ntot_at_lowerbdy]; planet)[1] /
+        scaleH_lowerboundary(zmin, Tn_arr[1]; molmass, M_P, R_P, zmin)
+    const manual_speciesbclist = Dict(
+        :CO2 => Dict("n" => [0.965 * ntot_at_lowerbdy, NaN], "f" => [NaN, 0.]),
+        :Ar  => Dict("n" => [5e11, NaN], "f" => [NaN, 0.]),
+        :CO  => Dict("n" => [4.5e-6 * ntot_at_lowerbdy, NaN], "f" => [NaN, 0.]),
+        :O2  => Dict("n" => [3e-3 * ntot_at_lowerbdy, NaN], "f" => [NaN, 0.]),
+        :N2  => Dict("n" => [0.032 * ntot_at_lowerbdy, NaN]),
+        :H2O => Dict("n" => [H2O_lowerbdy, NaN], "f" => [NaN, 0.]),
+        :HDO => Dict("n" => [HDO_lowerbdy, NaN], "f" => [NaN, 0.]),
+        :H   => Dict("v" => [-KoverH_lowerbdy, effusion_velocity(Tn_arr[end], 1.0; zmax, M_P, R_P)], "ntf" => [NaN, "see boundaryconditions()"]),
+        :D   => Dict("v" => [-KoverH_lowerbdy, effusion_velocity(Tn_arr[end], 2.0; zmax, M_P, R_P)], "ntf" => [NaN, "see boundaryconditions()"]),
+    )
     
-    # END SPECIAL
-    
-    const KoverH_lowerbdy = Keddy([zmin], [ntot_at_lowerbdy]; planet)[1]/scaleH_lowerboundary(zmin, Tn_arr[1]; molmass, M_P, R_P, zmin)
-    const manual_speciesbclist=Dict(# major species neutrals at lower boundary (estimated from Fox&Sung 2001, Hedin+1985, agrees pretty well with VIRA)
-                                    :CO2=>Dict("n"=>[0.965*ntot_at_lowerbdy, NaN], "f"=>[NaN, 0.]),
-                                    :Ar=>Dict("n"=>[5e11, NaN], "f"=>[NaN, 0.]),
-                                    :CO=>Dict("n"=>[4.5e-6*ntot_at_lowerbdy, NaN], "f"=>[NaN, 0.]),
-                                    :O2=>Dict("n"=>[3e-3*ntot_at_lowerbdy, NaN], "f"=>[NaN, 0.]),
-                                    :N2=>Dict("n"=>[0.032*ntot_at_lowerbdy, NaN]),
-
-                                    #Krasnopolsky, 2010a: this was 400ppb at 74km in altitude, and the actual number is likely lower (is either 4.0E-7, or 4.8E-7 depending on the calculation); and according to Zhang 2012 it is 3.66e-7
-                                    :HCl=>Dict("n"=>[3.66e-7 * ntot_at_lowerbdy, NaN]),
-
-                                    #Denis A. Belyaev 2012: this was 0.1 ppmv at 165–170 K to 0.5–1 ppmv at 190–192 K; It said 0.1ppm was related to the most common temperature reading so I went with that (this is either 1E-7 or 6.79E-8 depending on the calculation)
-                                    :SO2=>Dict("n"=>[1.0e-7 * ntot_at_lowerbdy, NaN]),
-
-                                    # water mixing ratio is fixed at lower boundary
-                                    :H2O=>Dict("n"=>[H2O_lowerbdy, NaN], "f"=>[NaN, 0.]),
-                                    # we assume HDO has the bulk atmosphere ratio with H2O at the lower boundary, ~consistent with Bertaux+2007 observations
-                                    :HDO=>Dict("n"=>[HDO_lowerbdy, NaN], "f"=>[NaN, 0.]),
-
-                                    # atomic H and D escape solely by photochemical loss to space, can also be mixed downward
-                                    :H=> Dict("v"=>[-KoverH_lowerbdy, effusion_velocity(Tn_arr[end], 1.0; zmax, M_P, R_P)],
-                                                    #                 ^^^ other options here:
-                                                    #                 effusion_velocity(Tn_arr[end], 1.0; zmax) # thermal escape, negligible
-                                                    #                 100 # representing D transport to nightside, NOT escape
-                                                    #                 NaN # No thermal escape to space, appropriate for global average model
-                                              "ntf"=>[NaN, "see boundaryconditions()"]),
-                                    :D=> Dict("v"=>[-KoverH_lowerbdy, effusion_velocity(Tn_arr[end], 2.0; zmax, M_P, R_P)], # 
-                                                    #                 ^^^ other options here:
-                                                    #                  effusion_velocity(Tn_arr[end], 2.0; zmax) # thermal escape, negligible
-                                                    #                 100 # representing D transport to nightside, NOT escape
-                                                    #                 NaN # No thermal escape to space, appropriate for global average model
-                                              "ntf"=>[NaN, "see boundaryconditions()"]),
-
-                                    # # H2 mixing ratio at lower boundary adopted from Yung&DeMore1982 as in Fox&Sung2001
-                                    # :H2=>Dict("n"=>[1e-7*ntot_at_lowerbdy, NaN],
-                                    #           "v"=>[NaN, effusion_velocity(Tn_arr[end], 2.0; zmax)],
-                                    #           "ntf"=>[NaN, "see boundaryconditions()"]),
-                                    # :HD=>Dict("n"=>[DH*1e-7*ntot_at_lowerbdy, NaN],
-                                    #           "v"=>[NaN, effusion_velocity(Tn_arr[end], 3.0; zmax)],
-                                    #           "ntf"=>[NaN, "see boundaryconditions()"]),
-
-                                    # unusued neutral boundary conditions
-                                    #:O=> Dict("v"=>[-KoverH_lowerbdy, NaN], "f"=>[NaN, 0.#=1.2e6=#]), # no effect on O profile
-                                    #:N=>Dict("v"=>[-KoverH_lowerbdy, NaN], "f"=>[NaN, 0.]),
-                                    #:NO=>Dict("v"=>[-KoverH_lowerbdy, NaN], #="n"=>[3e8, NaN],=# #="n"=>[5.5e-9*ntot_at_lowerbdy, NaN], =# "f"=>[NaN, 0.]),
-
-                                    # assume no ion loss, appropriate for global average and small observed rates
-                                    #:Hpl=>Dict("v"=>[-KoverH_lowerbdy, 0.0 #=effusion_velocity(Ti_arr[end], 1.0; zmax)=#]),#, "f"=>[NaN, 1.6e7]),
-                                    #:H2pl=>Dict("v"=>[-KoverH_lowerbdy, 0.0 #=effusion_velocity(Ti_arr[end], 2.0; zmax)=#]),#, "f"=>[NaN, 2e5]),
-                                    #:Opl=>Dict("v"=>[-KoverH_lowerbdy, 2e5], ), # "f"=>[NaN, 2.1e8] # tends to cause hollowing out of atmosphere
-                                    );
-
-    # add in downward mixing velocity boundary condition for all other species
     auto_speciesbclist = Dict()
     for sp in all_species
         if sp in keys(manual_speciesbclist)
             auto_speciesbclist[sp] = manual_speciesbclist[sp]
         else
-            auto_speciesbclist[sp] = Dict("v"=>[-KoverH_lowerbdy, 0.0])
+            auto_speciesbclist[sp] = Dict("v" => [-KoverH_lowerbdy, 0.0])
         end
     end
-
     const speciesbclist = deepcopy(auto_speciesbclist)
 end
+
 
 # ***************************************************************************************************** #
 #                                                                                                       #
