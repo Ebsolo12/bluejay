@@ -1593,9 +1593,10 @@ function boundaryconditions(fluxcoef_dict, atmdict, M; nonthermal=true, globvars
             # lower boundary...
             if GV.planet=="Mars"
                 n_lower = [fluxcoef_dict[sp][2, :][1], fluxcoef_dict[sp][1, :][2]*these_bcs["n"][1]]
+            elseif GV.planet=="Earth"
+                n_lower = [fluxcoef_dict[sp][2, :][1], fluxcoef_dict[sp][1, :][2]*these_bcs["n"][1]]
 
-            
-            elseif GV.planet in ["Venus", "Earth"]
+            elseif GV.planet=="Venus"
                 # get the eddy+molecular mixing velocities at the lower boundary of the atmosphere
                 v_lower_boundary_up = fluxcoef_dict[sp][1, # lower boundary cell, outside atmosphere
                                                         2] # upward mixing velocity
@@ -1625,8 +1626,11 @@ function boundaryconditions(fluxcoef_dict, atmdict, M; nonthermal=true, globvars
             
                 if GV.planet=="Mars"
                     n_upper = [fluxcoef_dict[sp][end-1, :][2], fluxcoef_dict[sp][end, :][1]*these_bcs["n"][2]]
+
+                elseif GV.planet=="Earth"
+                    n_upper = [fluxcoef_dict[sp][end-1, :][2], fluxcoef_dict[sp][end, :][1]*these_bcs["n"][2]]
             
-                elseif GV.planet in ["Venus", "Earth"]
+                elseif GV.planet=="Venus"
                     # get the eddy+molecular mixing velocities at the upper boundary of the atmosphere
                     v_upper_boundary_up = fluxcoef_dict[sp][end-1, # top cell of atmosphere
                                                             2]     # upward mixing velocity
@@ -1662,7 +1666,7 @@ function boundaryconditions(fluxcoef_dict, atmdict, M; nonthermal=true, globvars
                 f_lower = [0, these_bcs["f"][1]/GV.dz]
                 #             ^ no (-) sign, negative flux at lower boundary represents loss to surface
             elseif GV.planet=="Earth"
-                f_lower = [0, these_bcs["f"][1]/GV.dz]
+                f_lower = [0, -these_bcs["f"][1]/GV.dz]
             end
             try        
                 @assert all(x->!isnan(x), f_lower)
@@ -1699,8 +1703,8 @@ function boundaryconditions(fluxcoef_dict, atmdict, M; nonthermal=true, globvars
                 v_lower = [-these_bcs["v"][1]/GV.dz, 0]
             #          ^ (-) sign needed so that negative velocity at lower boundary represents loss to surface
             #          (see "Sign convention" note above)
-        elseif GV.planet=="Earth"
-            v_lower = [-these_bcs["v"][1]/GV.dz, 0]
+            elseif GV.planet=="Earth"
+            v_lower = [these_bcs["v"][1]/GV.dz, 0]
             end
 
             try
@@ -1949,8 +1953,18 @@ function fluxcoefs(sp::Symbol, Kv, Dv, H0v; globvars...)
         dTdzl_p[1] = @. (GV.Tp[1] - 1) / GV.dz
         Hsl[1] = @. (1 + GV.Hs_dict[sp][1]) / 2.0
         H0l[1] = @. (1 + H0v[charge_type(sp)][1]) / 2.0
+    
+    elseif GV.planet=="Earth"
+        Dl[1] = @. (1 + Dv[sp][1]) /  2.0
+        Kl[1] = @. (1 + Kv[1]) / 2.0
+        Tl_n[1] = @. (1 + GV.Tn[1]) / 2.0
+        Tl_p[1] = @. (1 + GV.Tp[1]) / 2.0
+        dTdzl_n[1] = @. (GV.Tn[1] - 1) / GV.dz
+        dTdzl_p[1] = @. (GV.Tp[1] - 1) / GV.dz
+        Hsl[1] = @. (1 + GV.Hs_dict[sp][1]) / 2.0
+        H0l[1] = @. (1 + H0v[charge_type(sp)][1]) / 2.0
 
-    elseif GV.planet in ["Venus", "Earth"]
+    elseif GV.planet=="Venus"
         # Downward transport away from the lower boundary layer, which is outside the model
         # These should never be used but we need to fill the array
         Dl[1] = Float64(NaN)
@@ -1983,7 +1997,16 @@ function fluxcoefs(sp::Symbol, Kv, Dv, H0v; globvars...)
         dTdzu_p[end] = @. (1 - GV.Tp[end]) / GV.dz
         Hsu[end] = @. (GV.Hs_dict[sp][end] + 1) / 2.0
         H0u[end] = @. (H0v[charge_type(sp)][end] + 1) / 2.0
-    elseif GV.planet in ["Venus", "Earth"]
+    elseif GV.planet=="Earth"
+        Du[end] = @. (Dv[sp][end] + 1) /  2.0
+        Ku[end] = @. (Kv[end] + 1) / 2.0
+        Tu_n[end] = @. (GV.Tn[end] + 1) / 2.0
+        Tu_p[end] = @. (GV.Tp[end] + 1) / 2.0
+        dTdzu_n[end] = @. (1 - GV.Tn[end]) / GV.dz
+        dTdzu_p[end] = @. (1 - GV.Tp[end]) / GV.dz
+        Hsu[end] = @. (GV.Hs_dict[sp][end] + 1) / 2.0
+        H0u[end] = @. (H0v[charge_type(sp)][end] + 1) / 2.0
+    elseif GV.planet=="Venus"
         # Upwards flux from the upper boundary layer, which is outside the model
         # These should never be used but we need to fill the array
         Du[end] = Float64(NaN)
@@ -2094,7 +2117,7 @@ function Keddy(z::Vector, nt::Vector; globvars...)
     elseif GV.planet=="Venus"
         k = 8e12*(nt .^ -0.5)
     elseif GV.planet=="Earth"
-        k = 8e12*(nt .^ -0.5) #wtf is the rest
+        k = 10e5*(nt .^ -0.5) #wtf is the rest
     end
 
     return k
@@ -2303,16 +2326,15 @@ function setup_water_profile!(atmdict; constfrac=1, dust_storm_on=false, make_sa
     check_requirements(keys(GV), [:all_species, :DH, :n_alt_index, :planet, :plot_grid, :results_dir, :sim_folder_name])
 
     # Set the initial fraction of the atmosphere for water to take up, plus the saturation fraction
-    # ================================================================================================================
-    # Currently this doesn't change behavior based on planet. 5/15/24
     H2Oinitfrac, H2Osatfrac = set_h2oinitfrac_bySVP(atmdict, hygropause_alt; globvars...)
 
-    if GV.planet=="Mars"
+    if GV.planet == "Mars"
         required = [:alt, :H2Osat, :n_alt_index, :non_bdy_layers, :num_layers, :speciescolor, :speciesstyle, :upper_lower_bdy_i, :water_mixing_ratio,]
         check_requirements(keys(GV), required)
 
         # For doing high and low water cases 
         # ================================================================================================
+
         if (water_amt=="standard") | (excess_water_in=="loweratmo")
             println("Standard profile: water case = $(water_amt), loc = $(excess_water_in), MR = $(GV.water_mixing_ratio)")
         else # low or high in mesosphere and above - special code for paper 3
@@ -2328,23 +2350,21 @@ function setup_water_profile!(atmdict; constfrac=1, dust_storm_on=false, make_sa
                 H2Oinitfrac[GV.upper_lower_bdy_i:end] .= H2Oinitfrac[GV.upper_lower_bdy_i]
             end
         end
-
         # set the water profiles 
         # ===========================================================================================================
-        atmdict[:H2O] = H2Oinitfrac.*n_tot(atmdict; GV.n_alt_index, GV.all_species)
-        atmdict[:HDO] = 2 * GV.DH * atmdict[:H2O] 
-        HDOinitfrac = atmdict[:HDO] ./ n_tot(atmdict; GV.n_alt_index, GV.all_species)  # Needed to make water plots.
+        atmdict[:H2O] = H2Oinitfrac .* n_tot(atmdict; GV.n_alt_index, GV.all_species)
+        atmdict[:HDO] = 2 * GV.DH * atmdict[:H2O]
+        HDOinitfrac = atmdict[:HDO] ./ n_tot(atmdict; GV.n_alt_index, GV.all_species)
 
-        # Add a gaussian parcel of water, to simulate the effect of a dust storm
-        # ===========================================================================================================
         if dust_storm_on
             sigma = 12.5
-            H2Oppm = 1e-6*map(z->GV.H2O_excess .* exp(-((z-GV.ealt)/sigma)^2), GV.non_bdy_layers/1e5) + H2Oinitfrac 
-            HDOppm = 1e-6*map(z->GV.HDO_excess .* exp(-((z-GV.ealt)/sigma)^2), GV.non_bdy_layers/1e5) + HDOinitfrac
+            H2Oppm = 1e-6 .* map(z -> GV.H2O_excess .* exp(-((z - GV.ealt) / sigma)^2), GV.non_bdy_layers ./ 1e5) + H2Oinitfrac
+            HDOppm = 1e-6 .* map(z -> GV.HDO_excess .* exp(-((z - GV.ealt) / sigma)^2), GV.non_bdy_layers ./ 1e5) + HDOinitfrac
             atmdict[:H2O][1:GV.upper_lower_bdy_i] = (H2Oppm .* n_tot(atmdict; GV.n_alt_index, GV.all_species))[1:GV.upper_lower_bdy_i]
             atmdict[:HDO][1:GV.upper_lower_bdy_i] = (HDOppm .* n_tot(atmdict; GV.all_species))[1:GV.upper_lower_bdy_i]
         end
-    elseif GV.planet=="Venus"
+    
+    elseif GV.planet == "Venus"
         ntot = n_tot(atmdict; GV.n_alt_index, GV.all_species)
 
         # TODO: Add a more interesting implementation as needed.
@@ -2352,30 +2372,52 @@ function setup_water_profile!(atmdict; constfrac=1, dust_storm_on=false, make_sa
         atmdict[:HDO] = 2 * GV.DH * atmdict[:H2O] 
 
         # SPECIAL: Try a prescribed high water abundance in the mesosphere.
-        if venus_special_water==true 
+        if venus_special_water==true
             n = 11
-            vmr_h2o = logrange(venus_special_h2o_bot, venus_special_h2o_top, n) 
-            vmr_hdo = logrange(venus_special_hdo_bot, venus_special_hdo_top, n) 
+            vmr_h2o = logrange(venus_special_h2o_bot, venus_special_h2o_top, n)
+            vmr_hdo = logrange(venus_special_hdo_bot, venus_special_hdo_top, n)
 
             atmdict[:H2O][1:n] = vmr_h2o .* ntot[1:n]
             atmdict[:HDO][1:n] = vmr_hdo .* ntot[1:n]
         end
-    elseif GV.planet=="Earth"
-        # TODO: Add a more interesting implementation as needed.
-        atmdict[:H2O] = constfrac .* n_tot(atmdict; GV.n_alt_index, GV.all_species)
-        atmdict[:HDO] = 2 * GV.DH * atmdict[:H2O]  
+    elseif GV.planet == "Earth"
+        required = [:alt, :H2Osat, :n_alt_index, :non_bdy_layers, :num_layers, :speciescolor, :speciesstyle, :upper_lower_bdy_i, :water_mixing_ratio,]
+        check_requirements(keys(GV), required)
+
+        # For doing high and low water cases 
+        # ================================================================================================
+
+        if (water_amt=="standard") | (excess_water_in=="loweratmo")
+            println("Standard profile: water case = $(water_amt), loc = $(excess_water_in), MR = $(GV.water_mixing_ratio)")
+        else
+            println("$(water_amt) in $(excess_water_in)")
+
+            toplim_dict = Dict("mesosphere" => GV.upper_lower_bdy_i, "everywhere" => GV.n_alt_index[GV.alt[end]])
+            a = 1
+            b = toplim_dict[excess_water_in]
+            H2Oinitfrac[a:b] = H2Oinitfrac[a:b] .* water_tanh_prof(GV.non_bdy_layers ./ 1e5; z0=GV.ealt, f=GV.ffac)[a:b]
+
+            if excess_water_in == "everywhere"
+                H2Oinitfrac[GV.upper_lower_bdy_i:end] .= H2Oinitfrac[GV.upper_lower_bdy_i]
+            end
+        end
+        
+        atmdict[:H2O] = H2Oinitfrac .* n_tot(atmdict; GV.n_alt_index, GV.all_species)
+        atmdict[:HDO] = 2 * GV.DH * atmdict[:H2O]
+        HDOinitfrac = atmdict[:HDO] ./ n_tot(atmdict; GV.n_alt_index, GV.all_species)
+
+        if dust_storm_on
+            sigma = 12.5
+            H2Oppm = 1e-6 .* map(z -> GV.H2O_excess .* exp(-((z - GV.ealt) / sigma)^2), GV.non_bdy_layers ./ 1e5) + H2Oinitfrac
+            HDOppm = 1e-6 .* map(z -> GV.HDO_excess .* exp(-((z - GV.ealt) / sigma)^2), GV.non_bdy_layers ./ 1e5) + HDOinitfrac
+            atmdict[:H2O][1:GV.upper_lower_bdy_i] = (H2Oppm .* n_tot(atmdict; GV.n_alt_index, GV.all_species))[1:GV.upper_lower_bdy_i]
+            atmdict[:HDO][1:GV.upper_lower_bdy_i] = (HDOppm .* n_tot(atmdict; GV.all_species))[1:GV.upper_lower_bdy_i]
+        end
     end
 
-    # Plot the water profile 
-    # ===========================================================================================================
-    if make_sat_curve
-        satarray = H2Osatfrac
-    else
-        satarray = nothing 
-    end
+    return atmdict
+end
 
-    plot_water_profile(atmdict, GV.results_dir*GV.sim_folder_name; watersat=satarray, H2Oinitf=H2Oinitfrac, plot_grid=GV.plot_grid, showonly=showonly, globvars...)
-end 
 
 function water_tanh_prof(z; f=10, z0=62, dz=11)
     #=
